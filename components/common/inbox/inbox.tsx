@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import NotificationPreview from './issue-preview';
 import IssueLine from './issue-line';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function Inbox() {
    const {
@@ -74,14 +75,11 @@ export default function Inbox() {
    };
 
    return (
-      <ResizablePanelGroup
-         direction="horizontal"
-         autoSaveId="inbox-panel-group"
-         className="w-full h-full"
-      >
+      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
          <ResizablePanel defaultSize={350} maxSize={500}>
             <div className="flex items-center justify-between px-4 h-10 border-b border-border">
                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="inline-flex lg:hidden" />
                   <h2 className="text-lg font-semibold">Inbox</h2>
                   <DropdownMenu>
                      <DropdownMenuTrigger asChild>
@@ -213,7 +211,7 @@ export default function Inbox() {
             </div>
          </ResizablePanel>
          <ResizableHandle withHandle />
-         <ResizablePanel defaultSize={350} minSize={10}>
+         <ResizablePanel defaultSize={350} maxSize={500}>
             <NotificationPreview notification={selectedNotification} onMarkAsRead={markAsRead} />
          </ResizablePanel>
       </ResizablePanelGroup>
