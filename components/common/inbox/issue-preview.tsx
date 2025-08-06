@@ -2,12 +2,11 @@
 
 import { InboxItem } from '@/mock-data/inbox';
 import { useNotificationsStore } from '@/store/notifications-store';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { renderStatusIcon } from '@/lib/status-utils';
-import { getNotificationIcon } from '@/lib/notification-utils';
 import { Button } from '@/components/ui/button';
 import { NotificationBox } from './icons/motification-box';
-import { Check } from 'lucide-react';
+import { Check, Paperclip, Send } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 interface IssuePreviewProps {
    notification?: InboxItem;
@@ -35,37 +34,18 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
 
    return (
       <div className="flex flex-col h-full">
-         <div className="flex items-center justify-between p-6 border-b border-border">
+         <div className="flex items-center justify-between px-4 h-10 border-b border-border">
             <div className="flex items-center gap-3">
-               <div className="relative">
-                  <Avatar className="size-10">
-                     <AvatarImage src={notification.user.avatarUrl} alt={notification.user.name} />
-                     <AvatarFallback className="text-sm">
-                        {notification.user.name
-                           .split(' ')
-                           .map((n) => n[0])
-                           .join('')}
-                     </AvatarFallback>
-                  </Avatar>
-
-                  <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-background border-2 border-background flex items-center justify-center">
-                     {getNotificationIcon(notification.type, 'size-3')}
-                  </div>
-               </div>
-
-               <div>
-                  <h2 className="font-semibold text-foreground">{notification.user.name}</h2>
-                  <p className="text-sm text-muted-foreground">{notification.timestamp}</p>
-               </div>
+               <span className="text-sm font-medium">{notification.identifier}</span>
             </div>
 
             <div className="flex items-center gap-2">
                {!notification.read && onMarkAsRead && (
                   <Button
                      variant="outline"
-                     size="sm"
+                     size="xs"
                      onClick={() => onMarkAsRead(notification.id)}
-                     className="gap-2"
+                     className="gap-1"
                   >
                      <Check className="size-4" />
                      Mark as read
@@ -74,7 +54,7 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
             </div>
          </div>
 
-         <div className="flex-1 p-6 space-y-4">
+         <div className="pt-10 pb-6 px-4 space-y-4 w-full max-w-4xl mx-auto">
             <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">
@@ -91,6 +71,22 @@ export default function IssuePreview({ notification, onMarkAsRead }: IssuePrevie
 
             <div className="prose prose-sm max-w-none">
                <p className="text-foreground leading-relaxed">{notification.content}</p>
+            </div>
+
+            <div className="relative w-full flex flex-col mt-8">
+               <Textarea
+                  className="w-full rounded-lg border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent pb-14 resize-none"
+                  placeholder="Leave a comment..."
+                  rows={3}
+               />
+               <div className="absolute right-3 bottom-3 flex items-center gap-3">
+                  <Button size="icon" variant="ghost">
+                     <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="secondary">
+                     <Send className="w-4 h-4" />
+                  </Button>
+               </div>
             </div>
          </div>
       </div>

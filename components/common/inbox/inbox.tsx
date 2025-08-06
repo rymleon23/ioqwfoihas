@@ -75,7 +75,11 @@ export default function Inbox() {
    };
 
    return (
-      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+      <ResizablePanelGroup
+         direction="horizontal"
+         autoSaveId="inbox-panel-group"
+         className="w-full h-full"
+      >
          <ResizablePanel defaultSize={350} maxSize={500}>
             <div className="flex items-center justify-between px-4 h-10 border-b border-border">
                <div className="flex items-center gap-2">
