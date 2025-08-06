@@ -1,3 +1,4 @@
+import React from 'react';
 import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { CreateIssueModalProvider } from '@/components/common/issues/create-issue-modal-provider';
@@ -5,9 +6,25 @@ import { cn } from '@/lib/utils';
 
 interface MainLayoutProps {
    children: React.ReactNode;
-   header: React.ReactNode;
+   header?: React.ReactNode;
    headersNumber?: 1 | 2;
 }
+
+const isEmptyHeader = (header: React.ReactNode | undefined): boolean => {
+   if (!header) return true;
+
+   if (React.isValidElement(header) && header.type === React.Fragment) {
+      const props = header.props as { children?: React.ReactNode };
+
+      if (!props.children) return true;
+
+      if (Array.isArray(props.children) && props.children.length === 0) {
+         return true;
+      }
+   }
+
+   return false;
+};
 
 export default function MainLayout({ children, header, headersNumber = 2 }: MainLayoutProps) {
    const height = {
@@ -24,7 +41,7 @@ export default function MainLayout({ children, header, headersNumber = 2 }: Main
                <div
                   className={cn(
                      'overflow-auto w-full',
-                     height[headersNumber as keyof typeof height]
+                     isEmptyHeader(header) ? 'h-full' : height[headersNumber as keyof typeof height]
                   )}
                >
                   {children}
