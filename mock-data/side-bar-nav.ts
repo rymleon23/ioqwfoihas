@@ -19,7 +19,7 @@ import {
 export const inboxItems = [
    {
       name: 'Inbox',
-      url: '#',
+      url: '/lndev-ui/inbox',
       icon: Inbox,
    },
    {

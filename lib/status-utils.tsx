@@ -9,3 +9,7 @@ export function renderStatusIcon(statusId: string): React.ReactElement | null {
    }
    return null;
 }
+
+export function getStatusById(statusId: string) {
+   return allStatus.find((item) => item.id === statusId);
+}
