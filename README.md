@@ -45,3 +45,36 @@ pnpm dev
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ln-dev7/circle&type=Date" />
  </picture>
 </a>
+
+## Auth + DB + Onboarding
+
+- Credentials login for development only (NextAuth v5)
+- Prisma + Postgres schema for User/Organization/Brand/Membership/CreatorProfile
+- Health check at /api/health
+- Onboarding flow to choose Creator or Brand and set internal role
+- Seed script with demo org, brand, and users
+
+### Environment
+
+Copy .env.example to .env.local and adjust values:
+
+`DATABASE_URL="postgresql://postgres:postgres@localhost:5432/circle_dev?schema=public"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="changeme-in-local"
+DEV_LOGIN_PASSWORD="dev"`
+
+Ensure Postgres is running and accessible by DATABASE_URL.
+
+### Database
+
+Generate and push schema, then seed (optional):
+
+`pnpm db:generate
+pnpm db:push
+pnpm db:seed`
+
+### Dev Login
+
+- Visit /auth/signin
+- Use any email and password equal to DEV_LOGIN_PASSWORD
+- After first login, go to /onboarding to set role
