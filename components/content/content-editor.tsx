@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
    Select,
@@ -25,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Save, Image, Plus, Calendar, Clock } from 'lucide-react';
 import { AssetLibrary } from '@/components/assets/asset-library';
 import { ScheduleContentModal } from '@/components/schedules/schedule-content-modal';
+import { RichTextEditor } from './rich-text-editor';
 
 interface Content {
    id: string;
@@ -216,13 +216,10 @@ export function ContentEditor({ orgId, contentId, onSave }: ContentEditorProps) 
 
                <div>
                   <Label htmlFor="body">Content Body</Label>
-                  <Textarea
-                     id="body"
+                  <RichTextEditor
                      value={body}
-                     onChange={(e) => setBody(e.target.value)}
+                     onChange={setBody}
                      placeholder="Write your content here..."
-                     rows={10}
-                     className="mt-1"
                   />
                </div>
             </div>

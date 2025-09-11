@@ -7,11 +7,11 @@ export async function publishScheduledContent() {
       // Find all schedules that are due for publication
       const dueSchedules = await prisma.schedule.findMany({
          where: {
-            date: {
+            runAt: {
                lte: now,
             },
             status: {
-               not: 'published',
+               not: 'PUBLISHED',
             },
          },
          include: {
@@ -27,7 +27,7 @@ export async function publishScheduledContent() {
             // Update schedule status to published
             await prisma.schedule.update({
                where: { id: schedule.id },
-               data: { status: 'published' },
+               data: { status: 'PUBLISHED' },
             });
 
             // Here you would integrate with your content publishing platform
@@ -52,7 +52,7 @@ export async function publishScheduledContent() {
             // You might want to mark the schedule as failed
             await prisma.schedule.update({
                where: { id: schedule.id },
-               data: { status: 'failed' },
+               data: { status: 'FAILED' },
             });
          }
       }

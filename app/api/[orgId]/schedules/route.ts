@@ -8,18 +8,42 @@ export async function GET(request: NextRequest, { params }: { params: { orgId: s
    try {
       const session = await auth();
       if (!session?.user?.id) {
-         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+         return NextResponse.json(
+            { ok: false, error: { code: 'E_UNAUTHORIZED', message: 'Unauthorized' } },
+            { status: 401 }
+         );
       }
 
       const { orgId } = params;
       const { searchParams } = new URL(request.url);
-      const campaignId = searchParams.get('campaignId');
+      const from = searchParams.get('from');
+      const to = searchParams.get('to');
+      const channels = searchParams.get('channels')?.split(',');
+      const campaigns = searchParams.get('campaigns')?.split(',');
 
       await requirePermission(session.user.id, orgId, PERMISSIONS.MANAGE_SCHEDULES);
 
-      const where = campaignId
-         ? { campaign: { organizationId: orgId }, campaignId }
-         : { campaign: { organizationId: orgId } };
+      const where: any = {
+         campaign: { organizationId: orgId },
+      };
+
+      // Add date range filter
+      if (from && to) {
+         where.runAt = {
+            gte: new Date(from),
+            lte: new Date(to),
+         };
+      }
+
+      // Add channel filter
+      if (channels && channels.length > 0) {
+         where.channel = { in: channels };
+      }
+
+      // Add campaign filter
+      if (campaigns && campaigns.length > 0) {
+         where.campaignId = { in: campaigns };
+      }
 
       const schedules = await prisma.schedule.findMany({
          where,
@@ -27,13 +51,14 @@ export async function GET(request: NextRequest, { params }: { params: { orgId: s
             campaign: true,
             content: true,
          },
+         orderBy: { runAt: 'asc' },
       });
 
-      return NextResponse.json(schedules);
+      return NextResponse.json({ ok: true, data: schedules });
    } catch (error) {
       console.error('Error fetching schedules:', error);
       return NextResponse.json(
-         { error: error instanceof Error ? error.message : 'Internal server error' },
+         { ok: false, error: { code: 'E_INTERNAL', message: 'Internal server error' } },
          { status: 500 }
       );
    }
@@ -43,7 +68,10 @@ export async function POST(request: NextRequest, { params }: { params: { orgId: 
    try {
       const session = await auth();
       if (!session?.user?.id) {
-         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+         return NextResponse.json(
+            { ok: false, error: { code: 'E_UNAUTHORIZED', message: 'Unauthorized' } },
+            { status: 401 }
+         );
       }
 
       const { orgId } = params;
@@ -58,24 +86,104 @@ export async function POST(request: NextRequest, { params }: { params: { orgId: 
          where: { id: validatedData.campaignId, organizationId: orgId },
       });
       if (!campaign) {
-         return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+         return NextResponse.json(
+            {
+               ok: false,
+               error: { code: 'E_NOT_FOUND', message: 'Campaign not found' },
+            },
+            { status: 404 }
+         );
       }
 
-      const schedule = await prisma.schedule.create({
-         data: validatedData,
-         include: {
-            campaign: true,
+      // Verify content belongs to campaign
+      const content = await prisma.content.findFirst({
+         where: { id: validatedData.contentId, campaignId: validatedData.campaignId },
+      });
+      if (!content) {
+         return NextResponse.json(
+            {
+               ok: false,
+               error: { code: 'E_NOT_FOUND', message: 'Content not found' },
+            },
+            { status: 404 }
+         );
+      }
+
+      // Check for potential conflicts (same channel at overlapping times)
+      const conflictingSchedule = await prisma.schedule.findFirst({
+         where: {
+            channel: validatedData.channel,
+            runAt: {
+               gte: new Date(new Date(validatedData.runAt).getTime() - 15 * 60 * 1000), // 15 minutes before
+               lte: new Date(new Date(validatedData.runAt).getTime() + 15 * 60 * 1000), // 15 minutes after
+            },
+            status: { not: 'CANCELLED' },
          },
       });
 
-      return NextResponse.json(schedule, { status: 201 });
+      if (conflictingSchedule) {
+         return NextResponse.json(
+            {
+               ok: false,
+               error: {
+                  code: 'E_CONFLICT_SLOT',
+                  message: 'Potential scheduling conflict detected',
+                  details: { conflictingScheduleId: conflictingSchedule.id },
+               },
+            },
+            { status: 409 }
+         );
+      }
+
+      // Create schedule and update content status in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+         const schedule = await tx.schedule.create({
+            data: {
+               runAt: new Date(validatedData.runAt),
+               timezone: validatedData.timezone,
+               channel: validatedData.channel,
+               status: validatedData.status || 'PENDING',
+               campaignId: validatedData.campaignId,
+               contentId: validatedData.contentId,
+            },
+            include: {
+               campaign: true,
+               content: true,
+            },
+         });
+
+         // Update content status to SCHEDULED
+         await tx.content.update({
+            where: { id: validatedData.contentId },
+            data: { status: 'SCHEDULED' },
+         });
+
+         return schedule;
+      });
+
+      return NextResponse.json({ ok: true, data: result }, { status: 201 });
    } catch (error) {
       console.error('Error creating schedule:', error);
       if (error instanceof Error && error.message === 'Insufficient permissions') {
-         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+         return NextResponse.json(
+            {
+               ok: false,
+               error: { code: 'E_FORBIDDEN', message: 'Forbidden' },
+            },
+            { status: 403 }
+         );
+      }
+      if (error instanceof Error && error.message.includes('Invalid date')) {
+         return NextResponse.json(
+            {
+               ok: false,
+               error: { code: 'E_VALIDATION', message: 'Invalid date format' },
+            },
+            { status: 400 }
+         );
       }
       return NextResponse.json(
-         { error: error instanceof Error ? error.message : 'Internal server error' },
+         { ok: false, error: { code: 'E_INTERNAL', message: 'Internal server error' } },
          { status: 500 }
       );
    }

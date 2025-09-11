@@ -104,18 +104,22 @@ describe('Schedule Schemas', () => {
    describe('createScheduleSchema', () => {
       it('should validate valid schedule data', () => {
          const data = {
-            date: '2024-01-01T10:00:00Z',
-            status: 'scheduled',
+            runAt: '2024-01-01T10:00:00Z',
+            timezone: 'America/New_York',
+            channel: 'FACEBOOK',
             campaignId: 'campaign-123',
+            contentId: 'content-123',
          };
          expect(() => createScheduleSchema.parse(data)).not.toThrow();
       });
 
       it('should reject invalid date', () => {
          const data = {
-            date: 'invalid-date',
-            status: 'scheduled',
+            runAt: 'invalid-date',
+            timezone: 'America/New_York',
+            channel: 'FACEBOOK',
             campaignId: 'campaign-123',
+            contentId: 'content-123',
          };
          expect(() => createScheduleSchema.parse(data)).toThrow();
       });

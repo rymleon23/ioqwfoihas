@@ -68,8 +68,8 @@ export function ScheduleContentModal({
    const form = useForm({
       resolver: zodResolver(createScheduleSchema),
       defaultValues: {
-         date: '',
-         status: 'scheduled',
+         runAt: '',
+         status: 'PENDING',
          campaignId: '',
          contentId: '',
       },
@@ -190,7 +190,7 @@ export function ScheduleContentModal({
 
                   <FormField
                      control={form.control}
-                     name="date"
+                     name="runAt"
                      render={({ field }) => (
                         <FormItem className="flex flex-col">
                            <FormLabel>Publication Date & Time</FormLabel>
@@ -271,8 +271,8 @@ export function ScheduleContentModal({
                                  </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                 <SelectItem value="scheduled">Scheduled</SelectItem>
-                                 <SelectItem value="draft">Draft</SelectItem>
+                                 <SelectItem value="PENDING">Pending</SelectItem>
+                                 <SelectItem value="PUBLISHED">Published</SelectItem>
                               </SelectContent>
                            </Select>
                            <FormMessage />

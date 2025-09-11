@@ -1,5 +1,43 @@
 import { z } from 'zod';
 
+// User schemas
+export const createUserSchema = z.object({
+   name: z.string().min(1, 'Name is required'),
+   email: z.string().email('Invalid email address'),
+   password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+});
+
+export const updateUserSchema = z.object({
+   name: z.string().min(1, 'Name is required').optional(),
+   email: z.string().email('Invalid email address').optional(),
+   image: z.string().url('Invalid URL').optional(),
+});
+
+export const userLoginSchema = z.object({
+   email: z.string().email('Invalid email address'),
+   password: z.string().min(1, 'Password is required'),
+});
+
+// Organization schemas
+export const createOrganizationSchema = z.object({
+   name: z.string().min(1, 'Organization name is required'),
+});
+
+export const updateOrganizationSchema = z.object({
+   name: z.string().min(1, 'Organization name is required').optional(),
+});
+
+// Membership schemas
+export const createMembershipSchema = z.object({
+   userId: z.string().min(1, 'User ID is required'),
+   organizationId: z.string().min(1, 'Organization ID is required'),
+   role: z.enum(['ADMIN', 'BRAND_OWNER', 'CREATOR']),
+});
+
+export const updateMembershipSchema = z.object({
+   role: z.enum(['ADMIN', 'BRAND_OWNER', 'CREATOR']).optional(),
+});
+
 // Campaign schemas
 export const createCampaignSchema = z.object({
    name: z.string().min(1, 'Name is required'),
@@ -15,12 +53,18 @@ export const updateCampaignSchema = z.object({
 export const createContentSchema = z.object({
    title: z.string().min(1, 'Title is required'),
    body: z.string().optional(),
+   status: z
+      .enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'SCHEDULED', 'PUBLISHED', 'REJECTED'])
+      .optional(),
    campaignId: z.string().min(1, 'Campaign ID is required'),
 });
 
 export const updateContentSchema = z.object({
    title: z.string().min(1, 'Title is required').optional(),
    body: z.string().optional(),
+   status: z
+      .enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'SCHEDULED', 'PUBLISHED', 'REJECTED'])
+      .optional(),
 });
 
 export const generateContentSchema = z.object({
@@ -50,15 +94,21 @@ export const updateAssetSchema = z.object({
 
 // Schedule schemas
 export const createScheduleSchema = z.object({
-   date: z.string().datetime('Invalid date'),
-   status: z.string().min(1, 'Status is required'),
+   runAt: z.string().datetime('Invalid date'),
+   timezone: z.string().min(1, 'Timezone is required'),
+   channel: z.enum(['FACEBOOK', 'INSTAGRAM', 'TWITTER', 'YOUTUBE', 'LINKEDIN', 'TIKTOK', 'BLOG']),
+   status: z.enum(['PENDING', 'PUBLISHED', 'FAILED', 'CANCELLED']).optional(),
    campaignId: z.string().min(1, 'Campaign ID is required'),
-   contentId: z.string().optional(),
+   contentId: z.string().min(1, 'Content ID is required'),
 });
 
 export const updateScheduleSchema = z.object({
-   date: z.string().datetime('Invalid date').optional(),
-   status: z.string().min(1, 'Status is required').optional(),
+   runAt: z.string().datetime('Invalid date').optional(),
+   timezone: z.string().min(1, 'Timezone is required').optional(),
+   channel: z
+      .enum(['FACEBOOK', 'INSTAGRAM', 'TWITTER', 'YOUTUBE', 'LINKEDIN', 'TIKTOK', 'BLOG'])
+      .optional(),
+   status: z.enum(['PENDING', 'PUBLISHED', 'FAILED', 'CANCELLED']).optional(),
    contentId: z.string().optional(),
 });
 

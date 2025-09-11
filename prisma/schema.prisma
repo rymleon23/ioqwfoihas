@@ -7,38 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NextAuth models
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  memberships   Membership[]
+  id              String           @id @default(cuid())
+  name            String?
+  email           String           @unique
+  password        String?
+  emailVerified   DateTime?
+  image           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  accounts        Account[]
   analyticsEvents AnalyticsEvent[]
+  memberships     Membership[]
+  sessions        Session[]
+  campaignMembers CampaignMember[]
+  assignedTasks   CampaignTask[]   @relation("TaskAssignee")
+  leadCampaigns   Campaign[]       @relation("CampaignLead")
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
   oauth_token_secret String?
-  oauth_token       String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oauth_token        String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -59,60 +61,66 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// App models
 model Organization {
-  id             String          @id @default(cuid())
-  name           String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  memberships    Membership[]
-  campaigns      Campaign[]
+  id              String           @id @default(cuid())
+  name            String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   analyticsEvents AnalyticsEvent[]
+  campaigns       Campaign[]
+  memberships     Membership[]
 }
 
 model Membership {
-  id             String     @id @default(cuid())
+  id             String       @id @default(cuid())
   userId         String
   organizationId String
   role           OrgRole
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
 }
 
-enum OrgRole {
-  ADMIN
-  BRAND_OWNER
-  CREATOR
-}
-
 model Campaign {
-  id             String          @id @default(cuid())
-  name           String
-  description    String?
-  organizationId String
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  contents       Content[]
-  schedules      Schedule[]
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  summary         String?
+  organizationId  String
+  health          CampaignHealth   @default(ON_TRACK)
+  status          CampaignStatus   @default(DRAFT)
+  priority        CampaignPriority @default(NO_PRIORITY)
+  leadId          String?          // Changed from lead string to leadId reference
+  startDate       DateTime?        // Changed from startDate to match requirements
+  targetDate      DateTime?        // Changed from endDate to targetDate
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   analyticsEvents AnalyticsEvent[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contents        Content[]
+  schedules       Schedule[]
+  members         CampaignMember[]
+  tasks           CampaignTask[]   // New relation
+  labels          CampaignLabel[]  // New relation
+  milestones      CampaignMilestone[] // New relation
+  lead            User?            @relation("CampaignLead", fields: [leadId], references: [id]) // New relation
 }
 
 model Content {
-  id             String          @id @default(cuid())
-  title          String
-  body           String?
-  campaignId     String
-  campaign       Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  assets         Asset[]
-  schedules      Schedule[]
+  id              String           @id @default(cuid())
+  title           String
+  body            String?
+  campaignId      String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  status          ContentStatus    @default(DRAFT)
   analyticsEvents AnalyticsEvent[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  assets          Asset[]
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  schedules       Schedule[]
 }
 
 model Asset {
@@ -124,34 +132,173 @@ model Asset {
   description String?
   tags        String[]
   contentId   String
-  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id         String   @id @default(cuid())
-  date       DateTime
-  status     String
+  id         String         @id @default(cuid())
+  name       String?
   campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   contentId  String?
-  content    Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  channel    Channel
+  runAt      DateTime
+  timezone   String         @default("UTC")
+  status     ScheduleStatus @default(PENDING)
+  campaign   Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  content    Content?       @relation(fields: [contentId], references: [id])
 }
 
 model AnalyticsEvent {
-  id             String      @id @default(cuid())
+  id             String        @id @default(cuid())
   event          String
   data           Json?
   userId         String?
-  user           User?       @relation(fields: [userId], references: [id])
   organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
   campaignId     String?
-  campaign       Campaign?   @relation(fields: [campaignId], references: [id])
   contentId      String?
-  content        Content?    @relation(fields: [contentId], references: [id])
-  createdAt      DateTime    @default(now())
+  createdAt      DateTime      @default(now())
+  campaign       Campaign?     @relation(fields: [campaignId], references: [id])
+  content        Content?      @relation(fields: [contentId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  user           User?         @relation(fields: [userId], references: [id])
+}
+
+model CampaignMember {
+  id         String   @id @default(cuid())
+  campaignId String
+  userId     String
+  role       CampaignMemberRole @default(MEMBER) // Changed from String to enum
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, userId])
+}
+
+// New models for complete campaign system
+model CampaignTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  assigneeId  String?
+  campaignId  String
+  parentTaskId String? // For subtasks
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  campaign     Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assignee     User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  parentTask   CampaignTask? @relation("TaskSubtasks", fields: [parentTaskId], references: [id])
+  subtasks     CampaignTask[] @relation("TaskSubtasks")
+}
+
+model CampaignLabel {
+  id         String   @id @default(cuid())
+  name       String
+  color      String   @default("#3B82F6") // Default blue color
+  campaignId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  @@unique([campaignId, name])
+}
+
+model CampaignMilestone {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  completedAt DateTime?
+  campaignId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+enum OrgRole {
+  ADMIN
+  BRAND_OWNER
+  CREATOR
+}
+
+enum ContentStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  REJECTED
+}
+
+enum ScheduleStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+enum Channel {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  YOUTUBE
+  LINKEDIN
+  TIKTOK
+  BLOG
+}
+
+enum CampaignHealth {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
+
+enum CampaignStatus {
+  DRAFT
+  PLANNING
+  READY
+  DONE
+  CANCELED
+}
+
+enum CampaignPriority {
+  NO_PRIORITY
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CampaignMemberRole {
+  OWNER
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
