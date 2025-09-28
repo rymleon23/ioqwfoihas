@@ -1,0 +1,18 @@
+# Rule: supabase-auth
+
+## Scope
+
+This rule applies to all authentication and session management logic in the Circle project. It defines how to implement user login, session handling and initial profile creation using Supabase Auth.
+
+## Instruction
+
+* **Authentication flow** — Use Supabase Auth for user login. Implement a login page that collects an email address and calls `supabase.auth.signInWithOtp({ email })` to send a magic link. Alternatively, you can add OAuth providers (Google, GitHub) using `supabase.auth.signInWithOAuth({ provider: 'google' })`.
+* **Session management** — Listen to the auth state using `supabase.auth.onAuthStateChange((event, session) => {...})` and store the session in a React context. Provide a hook (e.g. `useSession`) to access the current user and session across components. If there is no active session, redirect to the login page.
+* **User profile** — After a user signs in, ensure their profile exists in the `member` table. You can listen for the `SIGNED_IN` event and, if there is no record with `user_id = session.user.id`, call `supabase.from('member').insert({ user_id: session.user.id, display_name: session.user.user_metadata.name || session.user.email, avatar_url: session.user.user_metadata.avatar_url })`.
+* **Route protection** — Protect pages that require authentication by checking for a session on the client. In Next.js App Router, you can implement this as a higher‑order component or a layout that redirects unauthenticated users. On the server (e.g. API routes), pass the `supabase` client with the user’s access token in the `Authorization` header so that Row Level Security policies apply.
+* **Roles and permissions** — Use Supabase’s Row Level Security (RLS) policies to enforce permissions. For example, allow users to read or modify tasks only if they are members of the task’s team. Do not implement custom role checks in the client; rely on RLS.
+
+## Anti‑patterns
+
+* Hardcoding user IDs or bypassing Supabase’s security model.
+* Storing the session token in local storage without using the Supabase client; always let Supabase manage session storage.

@@ -1,0 +1,28 @@
+# Rule: phases-cycles
+
+## Scope
+
+Áp dụng cho việc tạo và quản lý Phases (Cycles). Rule này giải thích cách cấu hình độ dài, rollover strategy và các hành động khi phase kết thúc.
+
+## Instructions
+
+* Mỗi Team có thể kích hoạt Phases bằng cách chọn độ dài (`lengthWeeks`: 1–4) và ngày bắt đầu (`startDate`). Khi kích hoạt, hệ thống tạo `Phase` đầu tiên.  
+* Các Phase tiếp theo được tạo tự động dựa trên độ dài và sequence index (`sequenceIndex = previous + 1`).  
+* Khi phase kết thúc (`endDate < today`), backend cần thực hiện rollover theo `rolloverStrategy` của Team:  
+  * `carry-over` – gán tất cả Task chưa hoàn thành sang Phase mới.  
+  * `close-incomplete` – chuyển Task chưa hoàn thành sang trạng thái Done nhưng gán tag `incomplete`.  
+  * `no-rollover` – loại bỏ `phaseId` khỏi Task.  
+* Cho phép Owner/Admin thay đổi rolloverStrategy cho phase hiện tại trong trang Settings.
+* Burndown chart được tính dựa trên tổng số điểm/Task trong scope vs số điểm/Task hoàn thành mỗi ngày.
+
+## Contracts
+
+* API `POST /teams/{id}/phases/config` nhận `{lengthWeeks, startDate, rolloverStrategy}` để cấu hình.  
+* API `GET /phases?teamId=xxx` trả về danh sách phases theo thứ tự `sequenceIndex`.  
+* Khi rollover, viết log vào Activity, gửi notification; Task vẫn giữ `createdAt` & `updatedAt` không thay đổi.
+
+## Anti‑patterns
+
+* Không thay đổi độ dài phase trong khi phase đang active (trừ trường hợp khẩn cấp); nên áp dụng cho phase kế tiếp.  
+* Không tự động xoá phase cũ, vì cần giữ history để tính velocity.  
+* Không chạy rollover thủ công bằng UI; phải để hệ thống backend thực hiện nhằm đồng bộ tất cả Task cùng lúc.

@@ -1,0 +1,40 @@
+# Rule: analysis
+
+## Scope
+
+Áp dụng cho module Analysis & Dashboards. Rule này hướng dẫn cách xây dựng widget, tính KPI và triển khai API phục vụ dữ liệu.
+
+## Data model & aggregation
+
+* Sử dụng bảng `AnalyticsEvent` để lưu các hành động (task_completed, post_published, triage_event, etc.) với payload chi tiết; event được push bởi các service khác.  
+* Analysis Service đọc dữ liệu từ DB hoặc data warehouse; tính toán KPI theo batch (hàng ngày) hoặc realtime (khi cần).  
+* Tạo các Materialized view hoặc cache cho số liệu nặng (velocity, lead time) để đáp ứng nhanh cho Dashboard.  
+* Các widget cần specification: tên, loại biểu đồ, fields, filter khả dụng và cách tính toán.
+
+## Widget definition
+
+* Mỗi widget được định nghĩa với schema: `{id, name, type, query, xField, yField, filters[]}`.  
+* `type` có thể là bar, line, pie, scatter, burndown.  
+* `query` phải mô tả nguồn dữ liệu (AnalyticsEvent hoặc bảng khác) và phép tính (sum, avg, count).  
+* `filters` quy định các tham số người dùng có thể thay đổi (teamId, projectId, date range, phaseId).
+
+## API contract
+
+* `GET /dashboards` trả về danh sách dashboards có sẵn của user và các widget thuộc về.  
+* `POST /dashboards` tạo dashboard mới `{name, widgets[]}`.  
+* `GET /widgets/{id}/data?filters=…` trả về dữ liệu cho widget (labels & series).  
+* `POST /widgets` cho phép user tạo widget mới (vNext); server kiểm tra query và chỉ cho phép phép tính an toàn (no heavy join).
+
+## KPI calculations
+
+* **Velocity**: tổng `estimate` của Task có state category `completed` trong mỗi Phase.  
+* **Lead time**: TB (`completedAt` – `createdAt`) cho các Task completed trong khoảng thời gian.  
+* **Triage time**: TB (`firstActionAt` – `createdAt`) cho các Task nhận action Accept/Decline.  
+* **Engagement rate**: (like + comment + share) / reach.  
+* **Posting cadence**: histogram thời gian đăng; tính số bài đăng theo giờ/ngày.
+
+## Anti‑patterns
+
+* Không chạy truy vấn phân tích trực tiếp trên bảng production trong giờ cao điểm; phải sử dụng replica hoặc data warehouse.  
+* Không cho phép người dùng tự nhập câu lệnh SQL vào widget vì lý do bảo mật.  
+* Không hiển thị dữ liệu cá nhân nhạy cảm trên dashboard (email, số điện thoại); chỉ hiển thị số liệu tổng hợp.

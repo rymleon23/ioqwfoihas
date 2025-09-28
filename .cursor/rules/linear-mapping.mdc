@@ -1,0 +1,26 @@
+﻿# Rule: linear-mapping
+
+## Scope
+
+Áp dụng cho toàn bộ mã nguồn và tài liệu khi tham chiếu đến khái niệm cốt lõi; giúp chuẩn hoá từ ngữ và tránh nhầm lẫn. Rule này sẽ được dùng bởi hệ thống AI trong Cursor để tự động đổi tên và đưa ra gợi ý.
+
+## Instructions
+
+* Bảng thuật ngữ chuẩn nằm ở `docs/GLOSSARY.md`; luôn cập nhật/tra cứu tại đây trước khi đổi tên.
+* Khi sinh code hoặc cập nhật docs, nhớ attach `docs/GLOSSARY.md` và module liên quan trong `docs/modules/` để AI giữ đúng naming.
+
+* Bất kỳ khi nào xuất hiện từ **Issue**, tự động thay thế bằng **Task** trong UI và docs.  
+* Bất kỳ khi nào xuất hiện từ **Cycle**, tự động thay thế bằng **Phase**.  
+* Bất kỳ khi nào xuất hiện từ **Initiative**, tự động thay thế bằng **Strategic**.  
+* Tránh viết tắt không cần thiết; sử dụng chữ hoa đầu tiên khi là danh từ riêng (Project, Strategic).
+
+## Contracts
+
+* Trong code, vẫn có thể sử dụng các thư viện của Linear (như `linear-client`) nhưng kết quả trả về phải được map sang tên mới trước khi xuất ra giao diện.  
+* Khi ghi chú commit hoặc PR, nên sử dụng tên đã map để đồng nhất với UI.
+
+## Anti‑patterns
+
+* **Không**: “createIssue(title)” → “createTask(title)”.  
+* **Không**: “sprint” → “Phase” (nếu không thuộc dự án này).  
+* **Không**: đổi tên enum gốc của thư viện bên ngoài; chỉ map ở tầng adapter hoặc service.

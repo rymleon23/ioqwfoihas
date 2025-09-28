@@ -1,0 +1,32 @@
+# Rule: views-filters
+
+## Scope
+
+Áp dụng cho việc tạo, lưu và chia sẻ Views (bộ lọc) trong hệ thống. Rule này định nghĩa cách xây dựng query, chia sẻ scope và tổ chức UI.
+
+## Instructions
+
+* Views là tập hợp các tiêu chí filter (team, project, phase, status, priority, label, assignee, due date…). Người dùng có thể lưu filter hiện tại dưới tên tùy chọn.  
+* `scope` của View: `private` (chỉ người tạo), `team` (mọi thành viên team), `workspace` (mọi người trong workspace). Role Owner/Admin có thể tạo view workspace.  
+* URL phải phản ánh filter; khi share link, người khác có thể xem view ngay cả khi không có trong sidebar (nếu quyền cho phép).  
+* Khi update View, cần ghi nhận version; hỗ trợ rollback (vNext).
+
+## Contracts
+
+* API `POST /views` nhận `{name, filters, scope}`; trả về viewId.  
+* API `PATCH /views/{id}` cập nhật filters hoặc scope; chỉ creator hoặc Owner/Admin (nếu scope=workspace).  
+* API `GET /views?teamId=xxx` trả danh sách view theo scope phù hợp.  
+* Khi clone một view (Fork), tạo view mới với `creatorId` mới; copy filters.
+
+## UI guidelines
+
+* Trong sidebar, hiển thị danh sách view theo scope; biểu tượng nhận biết (private: icon user, team: icon group, workspace: icon globe).  
+* Tạo view bằng nút “Save current view”; hiển thị modal nhập tên và chọn scope.  
+* Có thể reorder hoặc ẩn View (chỉ thay đổi cho user).  
+* Search trong View list khi số lượng nhiều.  
+* Khi chia sẻ link, nếu người nhận không có quyền xem dữ liệu trong filter, UI hiển thị trạng thái “No access”.
+
+## Anti‑patterns
+
+* Không lưu filter trong localStorage mà không đồng bộ với server; cần lưu server để hỗ trợ nhiều thiết bị.  
+* Không gộp tất cả filter vào một query string dài; tách param rõ ràng để có thể bookmark và parse dễ dàng.

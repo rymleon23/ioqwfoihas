@@ -1,0 +1,26 @@
+# Rule: triage-inbox
+
+## Scope
+
+Áp dụng cho chức năng Triage (Inbox) trong Team. Tập trung vào logic Accept/Decline/Merge/Snooze/Assign, duplicate detection và rule tự động.
+
+## Instructions
+
+* Khi Task mới được tạo từ bất kỳ nguồn nào mà không có `stateId`, mặc định gán trạng thái đầu tiên của workflow Team (ví dụ `Backlog`) và đánh dấu là “In Triage”.  
+* `Accept` phải gán `assignee` hoặc để trống, set `stateId` theo config (ví dụ “To Do”) và bỏ cờ triage.  
+* `Decline` yêu cầu nhập `reason`; lưu thành comment và cập nhật status của Task thành `Canceled` (hoặc state thuộc category canceled).  
+* `Merge` nhận `targetTaskId`; di chuyển comment, attachments sang target; cập nhật relation `duplicate`.  
+* `Snooze` lưu thời gian `snoozeUntil`; hệ thống không hiển thị Task trong Inbox cho tới khi hết thời gian.  
+* `Assign` cho phép chỉ định team và assignee (nếu khác team, cần đảm bảo user thuộc team đó).  
+* Auto‑label/assign/duplicate detection được định nghĩa trong bảng `TriageRule` và thực thi theo thứ tự ưu tiên; rule có thể tạm tắt.
+
+## Contracts
+
+* Accept/Decline/Merge/Snooze/Assign phải log vào TriageEvent với action, performedBy, timestamp và metadata.  
+* Khi Apply rule, nếu có nhiều rule trùng, áp dụng rule đầu tiên; rule nào match xong thì dừng.  
+* Duplicate detection tính toán dựa trên tiêu đề & mô tả; trả về danh sách Task gần nhất. Không tự động merge; chỉ gợi ý.
+
+## Anti‑patterns
+
+* Không cập nhật trực tiếp state/assignee mà bỏ qua TriageEvent; phải luôn ghi TriageEvent để phục vụ báo cáo.  
+* Không xoá Task khỏi Inbox mà không xử lý action; Snooze cần thời gian rõ ràng.

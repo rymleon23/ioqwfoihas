@@ -1,0 +1,36 @@
+# Rule: ai-studio
+
+## Scope
+
+Áp dụng cho module AI Studio (In‑Task). Rule này hướng dẫn cách triển khai UI panel, gọi API, quản lý RAG và submit kết quả.
+
+## UI contract
+
+* AI Panel nằm trong tab riêng của Task; mở bằng nút “AI Assist”.  
+* Panel gồm: dropdown chọn `agent`, multi‑select `sources` (workspace/team/project/drive/task), field nhập prompt (optional), nút `Generate`, một editor hiển thị draft, nút `Regenerate`, nút `Submit`.  
+* Lịch sử draft hiển thị dưới phần editor: mỗi draft hiển thị `agent`, thời gian tạo; nhấn “Load” để chỉnh sửa lại.  
+* Khi Submit, nội dung được chèn vào comment hoặc lưu file đính kèm (tuỳ loại output).  
+* Các lỗi (timeout, no data, model error) hiển thị trong panel và không chặn các chức năng khác của Task.
+
+## Backend contract
+
+* Endpoint `POST /ai/generate` nhận `{taskId, agent, sources[], promptOverride}`; service thu thập data theo source, tạo prompt, gọi model GPT/Gemini; trả `{draftId, content, citations[]}`.  
+* Endpoint `POST /ai/submit` nhận `{taskId, draftId, content}`; lưu vào DB, tạo comment/attachment, update Activity.  
+* Endpoint `GET /ai/history?taskId=xxx` trả về danh sách bản nháp với metadata.
+
+## RAG & Agents
+
+* Agents phải khai báo cấu trúc (roles/responsibilities) ở file cấu hình, ví dụ: `agents.json`. Mỗi agent có `name`, `promptTemplate`, `model`, `maxTokens`, `temperature`, `supportedSources`.  
+* RAG sources phải đi kèm phân quyền; AI Service chỉ truy vấn file mà user hiện tại có quyền xem.  
+* Citation: AI Service phải trả về nguồn kèm ID và position; citation được chèn cuối content dưới dạng markdown `[1]`, `[2]`… và footnotes.
+
+## Safety & Guardrails
+
+* Loại bỏ dữ liệu nhạy cảm trước khi gửi tới model; mask số điện thoại, email, ID, token.  
+* Không trả lời ngoài phạm vi yêu cầu; nếu câu hỏi nằm ngoài domain marketing/project, trả về message “No relevant information found”.  
+* Giới hạn số lượng token đầu ra; cảnh báo khi input (RAG) quá dài.
+
+## Anti‑patterns
+
+* Không lưu prompt và output trực tiếp vào DB mà không mã hoá; nên lưu ở bảng riêng (`AiDraft`) với content đã qua kiểm duyệt.  
+* Không cho phép người dùng chạy agent chưa được định nghĩa; chỉ cung cấp danh sách preset và có thể thêm qua admin interface.

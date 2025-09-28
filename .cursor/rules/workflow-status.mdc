@@ -1,0 +1,25 @@
+# Rule: workflow-status
+
+## Scope
+
+Áp dụng cho việc định nghĩa và sử dụng Workflow/State cho Task. Rule này hướng dẫn cách tạo, chỉnh sửa và sử dụng trạng thái, cùng với estimation & priority.
+
+## Instructions
+
+* Khi tạo Team, sao chép workflow mặc định: Backlog (unstarted), Selected (unstarted), In Progress (started), Review (started), Done (completed), Canceled (canceled).  
+* Thêm trạng thái mới yêu cầu xác định `name` và `category`. Không cho phép thêm category mới (phải chọn trong bốn category chuẩn).  
+* Xoá trạng thái chỉ được phép khi không còn Task ở trạng thái đó hoặc khi người dùng chỉ định trạng thái thay thế cho các Task.  
+* Cho phép sắp xếp thứ tự trạng thái bằng drag‑n‑drop trong trang Workflow Settings; thứ tự này quyết định vị trí cột trong board.
+* `estimate` và `priority` là optional; nếu team không dùng estimation, không hiển thị field estimate. Giá trị priority phải là 0–4.
+* Có thể cấu hình “Blockers prevent completion”; khi bật, Task có relation `blocked‑by` chưa hoàn thành không thể chuyển sang state category `completed`.
+
+## Contracts
+
+* API `PATCH /workflows/{workflowId}` nhận danh sách `states` mới (array) với id hoặc name, category, order. Service phải kiểm tra trước khi ghi DB.  
+* Khi Task được kéo từ cột này sang cột khác trên board, gọi API `PATCH /tasks/{id}` với `stateId` mới; backend phải kiểm tra quyền người dùng và valid transition.  
+* State phải lưu thông tin `createdAt`, `updatedAt` để hỗ trợ history/audit.
+
+## Anti‑patterns
+
+* Không gán category `unstarted` cho trạng thái “Done”; category phải phản ánh đúng ý nghĩa.  
+* Không thay đổi category của state đã có dữ liệu; thay vào đó tạo state mới với category mong muốn và chuyển Task dần dần.

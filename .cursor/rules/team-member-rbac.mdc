@@ -1,0 +1,34 @@
+# Rule: team-member-rbac
+
+## Scope
+
+Áp dụng cho phần quản lý Team, Member và phân quyền (RBAC). Rule này định nghĩa role matrix và yêu cầu mã tạo API/middleware kiểm tra quyền người dùng theo role.
+
+## Role matrix
+
+| Role    | Team settings | Manage members | Create/Edit Task/Project | View reports |
+|--------|--------------|---------------|---------------------------|-------------|
+| Owner  | ✓            | ✓             | ✓                         | ✓           |
+| Admin  | ✓            | ✓             | ✓                         | ✓           |
+| Member | ✗            | ✗             | ✓                         | ✓           |
+| Guest  | ✗            | ✗             | ✗ (chỉ comment)           | ✓ (giới hạn) |
+
+## Instructions
+
+* Middleware `checkPermission(user, resource, action)` phải tra cứu role của user trong Membership để quyết định cho phép/không.  
+* Khi tạo Team, role `Owner` gán cho user tạo; Owner có tất cả quyền (quản lý Team, members, cài đặt).  
+* Một Member có thể thuộc nhiều Teams với role khác nhau.  
+* Guest chỉ được gắn vào Project cụ thể; API cần kiểm tra mapping Membership/Project trước khi trả dữ liệu.  
+* Role matrix có thể mở rộng (ví dụ “Viewer”); nhưng phải cập nhật rule và permission tương ứng.
+
+## Contracts
+
+* API trả về 403 (Forbidden) khi người dùng không có quyền; không trả 404 để tránh lộ tồn tại tài nguyên.  
+* Audit log phải ghi lại mọi thay đổi role (ai đổi, lúc nào, trước/sau).  
+* UI phải ẩn hoặc disable nút hành động nếu người dùng không đủ quyền.  
+* Khi xóa Member khỏi Team, phải cập nhật hoặc huỷ assignment Task liên quan (cấu hình).
+
+## Anti‑patterns
+
+* Không kiểm tra quyền ở tầng router mà nên triển khai middleware để tái sử dụng.  
+* Không lưu role trong JWT; luôn tra cứu role từ DB để phản ánh thay đổi kịp thời.

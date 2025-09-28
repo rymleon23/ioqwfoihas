@@ -1,0 +1,32 @@
+# Rule: mdc-format
+
+## Purpose
+
+Định nghĩa khuôn mẫu (blueprint) cho file `.mdc` và `.md` được sử dụng trong dự án. Tài liệu này giúp đảm bảo rằng các rule và tài liệu được viết nhất quán và dễ đọc đối với AI.
+
+## Structure
+
+Mỗi file `.mdc` nên bao gồm các section chính sau (có thể bỏ qua nếu không áp dụng):
+
+1. **Title** – `# Rule: [tên]` hoặc `# Module: [tên]` ở dòng đầu tiên.  
+2. **Scope** – mô tả phạm vi áp dụng (module, toàn dự án).  
+3. **Purpose/Instructions** – giải thích mục tiêu hoặc hướng dẫn cụ thể cho AI/Developers.  
+4. **Contracts** – (optional) liệt kê các cam kết API, UI hoặc logic mà module phải tuân theo.  
+5. **Examples** – (optional) ví dụ minh hoạ sử dụng rule.  
+6. **Anti‑patterns** – (optional) mô tả hành vi không mong muốn cần tránh.  
+7. **Metrics & Telemetry** – (optional) liệt kê các chỉ số cần theo dõi.  
+8. **Last updated** – (optional) thông tin cập nhật gần nhất.
+
+## Writing guidelines
+
+* Sử dụng Markdown thuần, không có HTML.  
+* Phân chia section rõ ràng bằng heading (`##`) hoặc bullet; không viết đoạn dài quá 20 dòng.  
+* Sử dụng bảng khi cần liệt kê role matrix hoặc mapping.  
+* Khi bổ sung thông tin quan trọng (ví dụ rule mới), cập nhật file này và ghi rõ ngày.  
+* Luôn giữ nội dung ngắn gọn, súc tích; tránh lặp lại thông tin đã có ở file khác.
+
+## Updating rules
+
+* Khi phát hiện AI hoặc developer vi phạm một rule, hãy cập nhật file `.mdc` liên quan với ví dụ mới hoặc “anti‑pattern” rõ ràng.  
+* Nếu một rule không còn phù hợp, di chuyển nội dung vào file Lịch sử/Deprecated và cập nhật tham chiếu.  
+* Không xoá rule gốc nếu người khác vẫn đang sử dụng; thay vào đó, tạo rule mới với tên khác và cập nhật liên kết.

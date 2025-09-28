@@ -1,0 +1,38 @@
+# Rule: social-scheduler
+
+## Scope
+
+Áp dụng cho module Social Integrations & Scheduler. Quy định cách kết nối tài khoản MXH, tạo ScheduledPost và xử lý queue, retry.
+
+## UI contract
+
+* Trong Task Detail, tab “Schedule” hiển thị danh sách ScheduledPost và form tạo mới.  
+* Form gồm: chọn Social Account (dropdown), nhập caption (markdown), chọn media (picker từ Drive), chọn ngày giờ (datetime picker).  
+* Mỗi ScheduledPost hiển thị avatar/nền tảng, caption rút gọn, thời gian, status. Có nút hủy (cancel) hoặc chỉnh sửa nếu chưa đăng.  
+* Nếu đăng thành công, hiển thị link post và icon tick; nếu lỗi, hiển thị icon cảnh báo với tooltip mô tả.
+
+## Backend contract
+
+* API `POST /scheduled-posts` nhận `{taskId, socialAccountId, caption, mediaRefs[], scheduledAt}`; service tạo bản ghi, kiểm tra quota và push vào queue.  
+* Worker xử lý queue: khi đến `scheduledAt`, gọi API mạng xã hội; cập nhật status, postResultId và url.  
+* API `PATCH /scheduled-posts/{id}` cho phép update caption, media, scheduledAt (nếu chưa đăng); khi update, phải cập nhật lại queue.  
+* API `DELETE /scheduled-posts/{id}` hủy một post; worker xoá job; status chuyển `canceled`.  
+* Nhận webhook từ các nền tảng (nếu có) tại `/social/webhook/{provider}`; dùng để cập nhật trạng thái.
+
+## Token & Permissions
+
+* Token MXH lưu trong vault; chỉ Social Service có quyền giải mã.  
+* Cần refresh token định kỳ (sử dụng refresh token nếu có).  
+* Chỉ Owner/Admin có thể thêm/xóa SocialAccount; Member có thể sử dụng token có sẵn.  
+* Trước khi đăng, worker phải kiểm tra token còn hợp lệ và quyền cần thiết (đăng Page, đăng Story…).
+
+## Retry & Error handling
+
+* Sử dụng thư viện queue hỗ trợ retry và backoff (ví dụ BullMQ).  
+* Định nghĩa số lần retry tối đa (mặc định 3); với lỗi không recoverable (ví dụ invalid media) chuyển status `failed` ngay.  
+* Nếu mạng xã hội trả về lỗi rate limit, worker nên thử lại sau thời gian khuyến nghị (thông qua header `Retry‑After`).
+
+## Anti‑patterns
+
+* Không lưu token trong code nguồn hoặc config file; phải sử dụng secrets management.  
+* Không call API MXH trực tiếp từ frontend; luôn thông qua backend để bảo mật và kiểm soát.

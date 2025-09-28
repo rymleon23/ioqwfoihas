@@ -1,0 +1,33 @@
+﻿# Rule: base
+
+## Scope
+
+Áp dụng cho toàn bộ dự án, trừ khi có rule module override trong thư mục con. Đây là rule gốc mô tả mục tiêu và conventions chung.
+
+## Project intent
+
+* Xây dựng một Marketing OS dựa trên Linear với các khái niệm đổi tên: Task (Issue), Project, Strategic (Initiative), Phase (Cycle), Triage.  
+* Lớp mở rộng bao gồm AI Studio (nội dung & phân tích), Social Integrations với scheduler, Drive Hub & RAG, Analysis dashboards.  
+* Ưu tiên trải nghiệm người dùng nhanh, phím tắt, UI rõ ràng, tối ưu hiệu năng.
+
+## Coding conventions
+
+* **Ngôn ngữ**: TypeScript cho cả frontend (React) và backend (Node/Express hoặc NestJS).  
+* **Style**: sử dụng ESLint & Prettier; follow Airbnb style guideline với vài tuỳ chỉnh.  
+* **API**: REST cho các endpoint chính; GraphQL ở các module phức tạp nếu cần; luôn trả về JSON có schema rõ ràng.  
+* **State**: sử dụng Zustand (hoặc Redux Toolkit) cho state cục bộ, React Query cho data fetching.  
+* **Test**: viết test (unit/integration) cho mỗi module; sử dụng Jest + Testing Library.  
+* **Naming**: tuân theo mapping Issue→Task, Cycle→Phase, Initiative→Strategic trong code và UI.
+
+## Documentation references
+
+* Primary PRD: `docs/PRD.md`
+* Architecture: `docs/ARCHITECTURE.md`, data model: `docs/DATA-MODEL.md`, UX: `docs/UX-UI.md`
+* Glossary: `docs/GLOSSARY.md` for canonical terminology mapping.
+* Feature specs: attach the relevant file under `docs/modules/` when working on a module.
+* Delivery guidance: `docs/IMPLEMENTATION-GUIDE.md` and `docs/PROJECT-PLAN.md` for sequencing & responsibilities.
+
+## Examples
+
+* Tạo component TaskCard tại `apps/web/components/TaskCard.tsx`, hiển thị title, assignee, labels, priority.  
+* Khi gọi API tạo Task, endpoint là `POST /tasks` thay vì `/issues`.

@@ -1,0 +1,32 @@
+# Rule: drive-rag
+
+## Scope
+
+Áp dụng cho module Drive Hub & RAG. Rule này hướng dẫn index file, permission và truy vấn vector store để hỗ trợ AI trong việc lấy thông tin tham chiếu.
+
+## Indexing instructions
+
+* Service indexer quét thư mục Drive theo chu kỳ (mặc định 5 phút) và khi có sự kiện file mới/chỉnh sửa.  
+* Với file văn bản (txt, md, docx, pdf), trích xuất văn bản thuần, tách đoạn và tạo embedding.  
+* Với file bảng tính, chỉ index tên sheet và header, không index dữ liệu chi tiết (để bảo mật).  
+* Các file media (ảnh/video) chỉ index metadata (tên, tag) và đường dẫn; RAG không sử dụng nội dung media trực tiếp.  
+* Lưu `vectorId` trong DB để truy vấn nhanh.  
+* Tôn trọng quyền: chỉ index file mà user/gửi yêu cầu có quyền xem; index phải tách theo workspace/team.
+
+## Query instructions
+
+* AI Service khi nhận nguồn `drive://folderId` sẽ lấy tất cả file con (đệ quy) trong folder, gửi vectorId sang vector store và nhận top K kết quả.  
+* Với nguồn `workspace://` hoặc `team://`, giới hạn tìm kiếm trong phạm vi workspace/team tương ứng.  
+* Sau khi lấy embedding, AI Service cần lấy nội dung gốc từ DriveFile để chèn vào prompt.  
+* Citation: luôn đính kèm `name`, `url` (hoặc id) của file trong citation list.
+
+## Permission
+
+* Tại thời điểm query RAG, AI Service kiểm tra rằng người dùng gọi API vẫn có quyền đọc file; nếu không, bỏ file ra khỏi kết quả.  
+* DriveAdmin có thể phân cấp quyền truy cập tới từng folder; indexer cập nhật danh sách permission theo thư mục cha.
+
+## Anti‑patterns
+
+* Không giữ cache embedding cũ khi file được cập nhật; luôn làm mới embedding khi `modifiedAt` thay đổi.  
+* Không truy vấn vector store mà không giới hạn phạm vi; luôn phải đi kèm nguồn (workspace/team/project).  
+* Không trả về nội dung file media trong prompt; chỉ dùng metadata để tham khảo.
