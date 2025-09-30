@@ -1,0 +1,19 @@
+# Rule: supabase-auth
+
+## Scope
+
+This rule applies to all authentication and session management logic in Marketing OS. It covers user login, session handling, and initial profile creation with Supabase Auth.
+
+## Instructions
+
+* **Authentication flow**: Use Supabase Auth for login. Provide a screen that collects an email address and calls `supabase.auth.signInWithOtp({ email })` to send a magic link. Add OAuth providers like Google or GitHub with `supabase.auth.signInWithOAuth({ provider: 'google' })` when required.
+* **Session management**: Subscribe to auth state changes with `supabase.auth.onAuthStateChange((event, session) => { ... })` and store the session in React context. Expose a hook such as `useSession` so components can read the user. Redirect to the login page when there is no active session.
+* **User profile**: After sign-in, ensure a row exists in the `member` table. On the `SIGNED_IN` event, if there is no record with `user_id = session.user.id`, call `supabase.from('member').insert({ user_id: session.user.id, display_name: session.user.user_metadata.name || session.user.email, avatar_url: session.user.user_metadata.avatar_url })`.
+* **Route protection**: Protect authenticated pages by checking the session. In Next.js App Router, use a layout or higher-order component that redirects unauthenticated users. On the server, pass the Supabase client with the user's access token through the `Authorization` header so Row Level Security policies run.
+* **Roles and permissions**: Enforce permissions with Supabase Row Level Security. For example, allow users to read or modify tasks only when they are members of the task's team. Do not duplicate permission logic in the client.
+
+## Anti-patterns
+
+* Hard-coding user IDs or bypassing Supabase security features.
+* Storing session tokens manually in localStorage instead of letting the Supabase client manage them.
+

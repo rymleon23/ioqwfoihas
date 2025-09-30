@@ -1,0 +1,37 @@
+# Rule: ai-studio
+
+## Scope
+
+Applies to the AI Studio module that lives inside the Task view. This rule directs how to render the panel, call the APIs, manage RAG sources, and submit results back into the task record.
+
+## UI contract
+
+* The AI Studio panel lives in its own tab within Task detail and is opened by the "AI Assist" trigger.
+* The panel must contain: a dropdown to pick an `agent`, a multi-select `sources` control (workspace, team, project, drive, task), an optional prompt text area, a `Generate` button, a rich text editor that shows the draft, plus `Regenerate` and `Submit` buttons.
+* Show draft history below the editor. Each entry displays the `agent`, timestamp, and a `Load` button that restores the draft into the editor for editing.
+* When the user submits, let them choose to store the content as a task comment, an attachment, or both. Reflect the selection before closing the panel.
+* Display all errors (timeout, missing data, model failure) inside the panel without blocking other Task actions.
+
+## Backend contract
+
+* Endpoint `POST /ai/generate` accepts `{ taskId, agent, sources, promptOverride }`, gathers data for each source, builds the prompt, calls the configured model, and returns `{ draftId, content, citations }`.
+* Endpoint `POST /ai/submit` accepts `{ taskId, draftId, content }`, stores the draft, creates the comment or attachment, and records an activity entry.
+* Endpoint `GET /ai/history?taskId=...` returns the list of drafts with metadata for pagination in the UI.
+
+## RAG and agents
+
+* Define agents in a config file such as `agents.json`. Each agent must declare `name`, `promptTemplate`, `model`, `maxTokens`, `temperature`, and `supportedSources`.
+* Enforce permissions on every RAG source; the AI service may only query files that the current user can read.
+* Return citations with `sourceId` and location data. Render citations at the end of the generated content using Markdown footnotes like `[1]` and include the expanded references.
+
+## Safety and guardrails
+
+* Strip sensitive data (phone numbers, emails, IDs, tokens) from context before sending prompts to the model.
+* Decline requests that fall outside the marketing or project domain by returning "No relevant information found".
+* Enforce maximum token counts and warn when the combined context exceeds limits.
+
+## Anti-patterns
+
+* Do not store prompts or outputs directly in shared tables without review. Use a dedicated `AiDraft` table and gate promotion to comments or files through submit.
+* Do not let end users run arbitrary agents. Only expose curated presets, and add new agents through the admin interface.
+

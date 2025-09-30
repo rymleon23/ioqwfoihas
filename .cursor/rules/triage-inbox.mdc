@@ -1,0 +1,27 @@
+# Rule: triage-inbox
+
+## Scope
+
+Applies to the Triage Inbox feature within teams. Focus on Accept, Decline, Merge, Snooze, Assign flows, duplicate detection, and automation rules.
+
+## Instructions
+
+* When a new task is created without a `stateId`, assign the team's default initial state (for example `Backlog`) and mark the task as `inTriage`.
+* `Accept` must assign an owner (or leave explicit unassigned), set the state according to configuration (for example `To Do`), and clear the triage flag.
+* `Decline` requires a `reason`, stores that reason as a comment, and updates the task state to the canceled category.
+* `Merge` takes a `targetTaskId`, moves comments and attachments to the target, and records a `duplicate` relation.
+* `Snooze` stores `snoozeUntil`; the task leaves the inbox until the time expires.
+* `Assign` allows selecting a team and assignee. If the task moves to a new team, confirm the user belongs to that team.
+* Automation rules (`TriageRule`) can auto-label, assign, or flag duplicates. Execute rules in priority order and stop after the first match when designed as mutually exclusive.
+
+## Contracts
+
+* Every Accept, Decline, Merge, Snooze, or Assign action must create a `TriageEvent` with action, performer, timestamp, and metadata.
+* When applying rules, honor priority. After a rule fires, proceed to the next only if the configuration allows chaining.
+* Duplicate detection runs similarity checks on title and description and returns matching tasks. Never auto-merge; prompt users to confirm.
+
+## Anti-patterns
+
+* Do not update task state or assignee without recording a `TriageEvent`. The event log powers reporting.
+* Do not hide tasks in the inbox without an explicit action. Snooze requires a clear expiration.
+

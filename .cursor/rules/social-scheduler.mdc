@@ -1,0 +1,39 @@
+# Rule: social-scheduler
+
+## Scope
+
+Applies to the Social Integrations and Scheduler module. This rule explains how to connect social accounts, create `ScheduledPost` records, process the queue, and handle retries.
+
+## UI contract
+
+* In Task detail, expose a "Schedule" tab that lists scheduled posts and includes the creation form.
+* The form must provide: a dropdown to select the social account, a markdown caption input, a media picker backed by Drive, and a datetime picker for the scheduled time.
+* Each scheduled post displays the platform avatar or color, a short caption preview, scheduled time, and current status. Include actions to cancel or edit while the post is pending.
+* Successful posts show the published link with a check icon. Failed posts display a warning icon with a tooltip that describes the error.
+
+## Backend contract
+
+* API `POST /scheduled-posts` accepts `{ taskId, socialAccountId, caption, mediaRefs, scheduledAt }`, creates the record, validates quota, and enqueues the job.
+* A worker processes the queue. When `scheduledAt` arrives it calls the provider API, then updates status, `postResultId`, and `url`.
+* API `PATCH /scheduled-posts/{id}` updates caption, media, or scheduled time when the post has not yet published, and reschedules the job.
+* API `DELETE /scheduled-posts/{id}` cancels the post, removes the job, and sets status to `canceled`.
+* Receive provider webhooks at `/social/webhook/{provider}` and use them to update status or metadata.
+
+## Tokens and permissions
+
+* Store social network tokens in a secrets vault; only the Social service may decrypt them.
+* Refresh tokens on a schedule when providers support it.
+* Only Owners or Admins can add or remove social accounts. Members may use existing tokens but cannot rotate them.
+* Before posting, verify the token is valid and has the required permissions (page publishing, story posting, etc.) for the intended action.
+
+## Retry and error handling
+
+* Use a queue library that supports retry and backoff (for example BullMQ).
+* Set a maximum number of retries (default three). For non-recoverable errors such as invalid media, mark the post as `failed` immediately.
+* If the platform returns a rate limit error, requeue the job using the provider `Retry-After` guidance.
+
+## Anti-patterns
+
+* Do not store tokens in source code or static config files; use managed secrets.
+* Do not call provider APIs directly from the frontend. Always go through backend services for security and control.
+

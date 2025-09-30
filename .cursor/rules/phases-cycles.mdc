@@ -1,0 +1,29 @@
+# Rule: phases-cycles
+
+## Scope
+
+Applies to creating and managing Phases (formerly Linear cycles). The rule defines cadence configuration, rollover strategy, and the actions required when a phase ends.
+
+## Instructions
+
+* Each team can enable phases by choosing `lengthWeeks` (1 through 4) and a `startDate`. Activating the schedule creates the initial `Phase` record.
+* Subsequent phases are generated automatically using the configured duration and by incrementing `sequenceIndex`.
+* When a phase ends (`endDate < today`), run the rollover flow that matches the team `rolloverStrategy`:
+  * `carry-over`: move every incomplete task into the next phase.
+  * `close-incomplete`: mark incomplete tasks as Done and tag them `incomplete`.
+  * `no-rollover`: remove the `phaseId` from tasks but leave them otherwise unchanged.
+* Allow Owners and Admins to update the current team rollover strategy in Settings.
+* Calculate burndown charts by comparing total points or task counts in scope against completed points per day.
+
+## Contracts
+
+* API `POST /teams/{id}/phases/config` accepts `{ lengthWeeks, startDate, rolloverStrategy }` to configure cadence.
+* API `GET /phases?teamId=...` returns phases ordered by `sequenceIndex`.
+* Rollover actions must write Activity entries and trigger notifications. Keep `createdAt` and `updatedAt` on tasks intact.
+
+## Anti-patterns
+
+* Do not change the phase length while the phase is active (unless a dedicated admin override exists). Apply changes to the next phase instead.
+* Do not delete historical phases; they are required for velocity reporting.
+* Do not rely on manual UI interactions to move every task during rollover; perform the work in the backend so tasks remain consistent.
+

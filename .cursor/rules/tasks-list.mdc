@@ -1,0 +1,53 @@
+# Rule: tasks-list
+
+## Scope
+
+Applies to Task list and backlog experiences across the web app (list, board, timeline shells) plus supporting API/server logic that feeds those views. Use together with `base.mdc`, `workflow-status.mdc`, `views-filters.mdc`, and `team-member-rbac.mdc` when building related features.
+
+## Objectives
+
+* Mirror Linear-style prioritized backlog with Marketing OS vocabulary: every task row/card shows title, state badge (category aware), assignee avatar, priority (0-4), due date, and latest status note if present.
+* Replace mock data with Supabase queries (`task`, `workflow_state`, `member`, `project`, `phase`) filtered by current workspace/team.
+* Provide fast filtering and optimistic updates; default sort by `priority` desc then `updated_at` desc, with pinning for state categories when custom views apply.
+
+## Data requirements
+
+* Always select `task.id`, `title`, `state_id`, `assignee_id`, `team_id`, `project_id`, `phase_id`, `priority`, `due_date`, `updated_at`, `labels`, `parent_id`, `estimate`.
+* Join `workflow_state` to expose `state.name`, `state.category`, `state.position`; reject responses missing category mapping (must be one of `unstarted|started|completed|cancelled`).
+* Join `member` for assignee display (name, avatar). Fallback to initials derived from `member.display_name`.
+* Include derived flags: `isBlocked` from relations (`blocks` / `blocked_by`), `hasOverdue` (due_date < now && state.category != `completed`), `inTriage` (state.category == `unstarted` && latest triage event < 48h).
+
+## Implementation notes
+
+* Fetch with TanStack Query hooks (`useTaskList`) that accept `{ teamId?, projectId?, phaseId?, viewId?, search?, stateCategory? }`; build Supabase SQL using `rpc` or query builder. Cache per workspace ID.
+* Keep ephemeral UI state (selected task ID, expanded groups, quick filters) in Zustand; never embed it in query cache objects.
+* Mutations (create/update/reorder) must call Supabase RPC or REST endpoints that wrap SQL functions to ensure RLS passes. After mutate, invalidate affected queries (`task`, `saved_view`, `task_relation`).
+* Support incremental delivery: start with List view (group by state category) but structure components so Board/Timeline can reuse the same data loader. Extract presenter functions (`mapTaskToCardProps`) for reuse in tests.
+* Surface status note badge by reading last comment tagged `status_update` (if available) via lightweight subquery; defer to lazy fetch for heavy comment threads.
+
+## UI/UX guidelines
+
+* Default view: single column list sorted by priority; show state tag, assignee avatar, due badge, label chips. Double-click or press `Enter` opens Task detail panel in split view.
+* Keyboard: `j/k` moves selection, `c` creates task prefilled with current filters, `Cmd/Ctrl+Shift+K` focuses quick search (reuse command palette binding when integrated).
+* Group toggles: allow user to switch between `Group by state`, `Group by assignee`, `Ungrouped`; persist preference in `saved_view.settings`.
+* Empty states: show contextual CTA depending on filter (e.g. "No tasks in Phase Alpha" with button `Create task`). When filter yields zero results, offer "Clear filters" action.
+
+## Quality gates
+
+* Include component tests covering list rendering, badge logic, overdue indicator, blocked warning, and keyboard navigation (React Testing Library + user-event).
+* Write integration test hitting `/api/tasks?teamId=...` to validate RLS policies permit/deny correctly using Supabase test helpers.
+* Capture Storybook (or Chromatic) snapshots for list row and grouped view to prevent UI regressions.
+
+## Anti-patterns
+
+* Do not hard-code mock arrays or bypass Supabase in production code; feature must read real data once migrations exist.
+* Avoid leaking workspace-wide tasks to other teams; all queries must filter by `workspace_id` derived from the authenticated session plus membership check.
+* Never mutate TanStack cache manually without corresponding Supabase update; use standard invalidation to keep real-time updates reliable.
+
+## References
+
+* Product scope: `docs/PRD.md` (Tasks & Relations, Views & Filters sections).
+* Data contracts: `docs/DATA-MODEL.md` (`task`, `workflow_state`, `task_relation`, `saved_view`).
+* Vertical slice details: `docs/IMPLEMENTATION-GUIDE.md` step 3.2.
+* Naming alignment: `docs/GLOSSARY.md` ("Task", "Phase", "Strategic", "Triage").
+

@@ -1,0 +1,27 @@
+# Rule: replace-mock-with-api
+
+## Scope
+
+This rule applies to Marketing OS files that still import data from `mock-data/*` or rely on the prototype Zustand store. It explains how to remove in-memory mocks and replace them with real backend calls.
+
+## Instructions
+
+* **No mock data**: Do not import or reference anything under `mock-data/*` in new or updated code. Those files existed only for the prototype and provided static lists for tasks, teams, projects, and phases. Likewise, avoid using the legacy Zustand store functions for CRUD operations.
+* **Use Supabase**: For all data access, interact with Supabase through `@supabase/supabase-js`. Example:
+  ```ts
+  const { data: tasks, error } = await supabase
+    .from('task')
+    .select('*')
+    .eq('team_id', teamId);
+  ```
+  Use `.insert([...])` to create records and `.update({...}).eq('id', id)` to modify them. After mutations, invalidate TanStack Query caches (or equivalent) so the UI refreshes.
+* **Server state**: Prefer TanStack Query or SWR to manage server state. Do not duplicate Supabase data in a global store; fetch where needed and cache with the query library.
+* **Action handlers**: Replace helpers such as `removeNotification`, `addIssue`, or `updateProject` with functions that perform actual Supabase mutations and then refresh the affected queries.
+* **Preserve UI**: Keep the existing layout and styling intact. Only switch data sources and side effects to the real APIs.
+
+## Anti-patterns
+
+* Importing any module from `mock-data/*` or referencing the prototype store in production code.
+* Logging actions to the console instead of performing real API calls.
+* Maintaining parallel caches that disagree with Supabase; treat Supabase as the source of truth.
+

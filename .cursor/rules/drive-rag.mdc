@@ -1,0 +1,33 @@
+# Rule: drive-rag
+
+## Scope
+
+Applies to the Drive Hub and Retrieval-Augmented Generation module. This rule explains how to index files, enforce permissions, and query the vector store to provide references for AI features.
+
+## Indexing instructions
+
+* The indexing service scans the Drive directory on a schedule (default every five minutes) and whenever files are created or updated.
+* For document formats (txt, md, docx, pdf) extract plain text, chunk it, and compute embeddings.
+* For spreadsheets, index sheet names and headers only; skip row-level data to avoid leaking sensitive information.
+* For media files (images or video) index metadata only (name, tags, duration). Do not inject raw media content into embeddings.
+* Store the resulting `vectorId` in the database so queries can fetch matches quickly.
+* Respect permissions during indexing: only process files the requesting user can access, and partition embeddings by workspace or team boundary.
+
+## Query instructions
+
+* When the AI service receives a source like `drive://folderId`, gather all descendant files from that folder and request the top-K matches from the vector store.
+* For `workspace://` or `team://` sources, restrict the search scope to the matching workspace or team.
+* After retrieving embedding matches, fetch the original file content from `DriveFile` to build the final prompt context.
+* Include citations with the file `name` and `url` (or id) for each referenced document.
+
+## Permission rules
+
+* At query time, re-check that the current user still has access to each file. Drop files that fail the permission check.
+* Drive administrators can grant folder-level access; the indexer keeps the inherited permission list in sync.
+
+## Anti-patterns
+
+* Do not reuse stale embeddings when a file changes. Recompute embeddings whenever `modifiedAt` updates.
+* Do not run unbounded vector searches; always filter by workspace, team, or project context.
+* Do not place raw media content directly in prompts; supply metadata instead.
+

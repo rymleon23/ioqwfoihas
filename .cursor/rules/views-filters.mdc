@@ -1,0 +1,33 @@
+# Rule: views-filters
+
+## Scope
+
+Applies to creating, storing, and sharing saved views (filtered task lists) in Marketing OS. The rule defines query construction, sharing scopes, and UI behaviors.
+
+## Instructions
+
+* A view is a saved set of filters (team, project, phase, status, priority, label, assignee, due date, etc.). Users may save the current filter set with a custom name.
+* Each view has a `scope`: `private` (visible only to the creator), `team` (available to team members), or `workspace` (available to everyone in the workspace). Only Owners and Admins may create workspace views.
+* Encode filters in the URL so that sharing a link reproduces the same view, even if the recipient has not pinned it in the sidebar (provided they have permission).
+* When a view is updated, record a version for potential rollback (planned for vNext).
+
+## Contracts
+
+* API `POST /views` accepts `{ name, filters, scope }` and returns the new `viewId`.
+* API `PATCH /views/{id}` updates filters or scope. Only the creator or an Owner/Admin (for workspace scope) may update.
+* API `GET /views?teamId=...` returns views the user can access based on scope.
+* View cloning creates a new record with the current user as `creatorId` and copies the filter payload.
+
+## UI guidelines
+
+* Show views in the sidebar grouped by scope, and use icons to distinguish them (user, team, globe).
+* Provide a "Save current view" action that opens a modal for name and scope selection.
+* Allow users to reorder or hide views without affecting other users.
+* Offer search when the list of views is long.
+* When a user opens a shared view but lacks permission to the underlying data, show a "No access" state instead of leaking information.
+
+## Anti-patterns
+
+* Do not rely solely on localStorage for saved filters; persist them on the server to support multiple devices.
+* Do not pack every filter into a single unreadable query string. Use structured parameters so links remain stable and easy to parse.
+

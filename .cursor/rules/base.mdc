@@ -1,0 +1,39 @@
+# Rule: base
+
+## Scope
+
+Applies to the entire Marketing OS project unless a module specific rule in a subdirectory overrides it. This is the canonical rule set for overall goals and conventions.
+
+## Project intent
+
+* Build a Marketing OS on top of the Linear mental model with renamed primitives: Task (Issue), Project, Strategic (Initiative), Phase (Cycle), Triage.
+* Ship an extensible surface that includes AI Studio (content and analysis), Social Integrations with scheduler, Drive Hub and Retrieval-Augmented Generation, and Analysis dashboards.
+* Prioritize fast, high-quality user experience with clear UI and efficient performance.
+
+## Coding conventions
+
+* **Language**: TypeScript for both frontend (React) and backend (Node/Express or NestJS).
+* **Style**: ESLint and Prettier aligned with the Airbnb guide plus targeted overrides.
+* **API**: REST for primary endpoints; adopt GraphQL only for complex modules; always return JSON with explicit schemas.
+* **State**: Use Zustand (or Redux Toolkit) for client state, and React Query for data fetching.
+* **Test**: Provide unit and integration tests for every module using Jest and Testing Library.
+* **Naming**: Follow the mapping Issue -> Task, Cycle -> Phase, Initiative -> Strategic across code and UI.
+
+## Documentation references
+
+* Primary PRD: `docs/PRD.md`
+* Architecture: `docs/ARCHITECTURE.md`; data model: `docs/DATA-MODEL.md`; UX: `docs/UX-UI.md`
+* Glossary: `docs/GLOSSARY.md` for canonical terminology mapping.
+* Feature specs: attach the relevant file under `docs/modules/` when working on a module.
+* Delivery guidance: `docs/IMPLEMENTATION-GUIDE.md` and `docs/PROJECT-PLAN.md` for sequencing and responsibilities.
+
+## Examples
+
+* Create a TaskCard component at `apps/web/components/TaskCard.tsx` that displays title, assignee, labels, and priority.
+* When calling the API to create a Task, use the endpoint `POST /tasks` instead of `/issues`.
+
+## Task management rules
+
+* **Task list creation**: Maintain a single prioritized backlog per workspace in Linear-style boards. Every list row must specify the team, owner (or unassigned), current workflow state, and the latest status update timestamp before the daily standup.
+* **Task detail generation**: When creating a Task, confirm product or customer value, capture acceptance criteria in bullet form, link supporting documents, list blockers and dependencies, and note expected delivery (due date or phase) so the work stays traceable.
+

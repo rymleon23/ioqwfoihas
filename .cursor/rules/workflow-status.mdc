@@ -1,0 +1,26 @@
+# Rule: workflow-status
+
+## Scope
+
+Applies to defining and managing task workflows and states. The rule covers creation, ordering, estimation, and priority handling.
+
+## Instructions
+
+* When a team is created, seed the default workflow with states: Backlog (unstarted), Selected (unstarted), In Progress (started), Review (started), Done (completed), and Canceled (canceled).
+* Adding a new state requires `name` and `category`. Categories must come from the approved set; do not invent new categories.
+* Allow deleting a state only if no tasks reference it, or after users map those tasks to another state.
+* Support drag-and-drop ordering in Workflow Settings. The order drives column placement on boards.
+* Treat `estimate` and `priority` as optional fields. If a team opts out of estimation, hide the estimate column. Priority must remain within 0-4.
+* Support the configuration `blockersPreventCompletion`. When enabled, a task with open `blocked_by` relations cannot move into a completed category.
+
+## Contracts
+
+* API `PATCH /workflows/{workflowId}` accepts the new state list (ids, names, categories, order). Validate inputs before writing to the database.
+* When a task moves between columns, call `PATCH /tasks/{id}` with the new `stateId`. The backend must verify permissions and that the transition is allowed.
+* Store `createdAt` and `updatedAt` on states for audit history.
+
+## Anti-patterns
+
+* Do not assign the `unstarted` category to states that mean "Done". Categories must reflect the actual lifecycle stage.
+* Do not change the category of a state that already has data. Instead, create a new state with the desired category and migrate tasks intentionally.
+

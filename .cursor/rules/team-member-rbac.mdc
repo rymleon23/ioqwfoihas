@@ -1,0 +1,35 @@
+# Rule: team-member-rbac
+
+## Scope
+
+Applies to team and member management plus all role-based access control (RBAC) checks. This rule defines the role matrix and the authorization middleware required for Marketing OS.
+
+## Role matrix
+
+| Role   | Team settings | Manage members | Create/Edit Task or Project | View reports |
+|--------|---------------|----------------|------------------------------|--------------|
+| Owner  | Yes           | Yes            | Yes                          | Yes          |
+| Admin  | Yes           | Yes            | Yes                          | Yes          |
+| Member | Limited       | Limited        | Yes                          | Yes          |
+| Guest  | Limited       | Limited        | Comment only                 | Limited      |
+
+## Instructions
+
+* Middleware `checkPermission(user, resource, action)` must look up the user's role in membership records and decide whether to allow the request.
+* The user who creates a team becomes the `Owner`. Owners have full access to settings, member management, and configuration.
+* A member may belong to several teams and hold different roles per team.
+* Guests can only be attached to specific projects. APIs must validate the membership-to-project mapping before returning data.
+* If you add new roles (for example `Viewer`), update this rule and the permission matrix at the same time.
+
+## Contracts
+
+* Return HTTP 403 (Forbidden) when a user lacks permissions. Do not mask the resource with 404.
+* Log every role change in the audit trail, capturing who made the change, when, and the before/after values.
+* The UI must hide or disable actions that the current user cannot perform.
+* When removing a member from a team, update or remove any task assignments linked to that user.
+
+## Anti-patterns
+
+* Do not duplicate permission checks in every route handler; centralize them in middleware.
+* Do not store roles inside JWTs. Always read the latest role from the database so changes take effect immediately.
+

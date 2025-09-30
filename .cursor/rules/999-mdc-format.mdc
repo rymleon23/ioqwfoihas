@@ -1,0 +1,33 @@
+# Rule: mdc-format
+
+## Purpose
+
+Defines the template used for `.mdc` and `.md` files in this repository. Keeping the format consistent helps both humans and Codex consume the rules without confusion.
+
+## Structure
+
+Each `.mdc` file should include the following sections when they apply:
+
+1. **Title** - start with `# Rule: [name]` or `# Module: [name]`.
+2. **Scope** - describe where the rule applies (module or entire project).
+3. **Purpose/Instructions** - explain the goal and provide actionable guidance for AI or developers.
+4. **Contracts** - optional; document API, UI, or logic commitments that must stay stable.
+5. **Examples** - optional; add concrete usage examples.
+6. **Anti-patterns** - optional; note behaviors to avoid.
+7. **Metrics and Telemetry** - optional; list required logging or KPIs.
+8. **Last updated** - optional; record when the rule was last revised.
+
+## Writing guidelines
+
+* Use plain Markdown; avoid embedding HTML.
+* Split content into headings (`##`) and succinct bullets. Keep paragraphs short (no more than about 20 lines).
+* Use tables for role matrices or mappings when needed.
+* Update this file when you add important guidance or new modules.
+* Write in clear, direct language and avoid repeating information that already exists in other rules.
+
+## Updating rules
+
+* When AI or developers violate a rule, update the related `.mdc` file with clearer instructions or add an anti-pattern that explains the failure.
+* If a rule becomes obsolete, move it to a history or deprecated folder instead of deleting it outright, and update cross-references.
+* Do not remove foundational rules that other contributors still rely on; create a new rule with a distinct name and link it if behavior changes.
+
