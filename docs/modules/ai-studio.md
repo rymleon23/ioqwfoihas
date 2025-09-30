@@ -1,4 +1,4 @@
-﻿# Module: AI Studio (In-Task)
+# Module: AI Studio (In-Task)
 
 ## Mục đích
 Cung cấp panel AI ngay trong Task detail để tạo nháp nội dung, review và đẩy vào task cùng citation từ nguồn RAG.

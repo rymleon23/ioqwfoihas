@@ -1,4 +1,4 @@
-﻿# Kiến trúc tổng quan
+# Kiến trúc tổng quan
 
 Tài liệu mô tả kiến trúc hệ thống Marketing OS theo phong cách Linear, bảo đảm khả năng mở rộng, dễ bảo trì và linh hoạt khi bổ sung tính năng mới.
 

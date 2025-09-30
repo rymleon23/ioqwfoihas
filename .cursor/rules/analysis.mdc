@@ -2,39 +2,40 @@
 
 ## Scope
 
-Áp dụng cho module Analysis & Dashboards. Rule này hướng dẫn cách xây dựng widget, tính KPI và triển khai API phục vụ dữ liệu.
+Applies to the Analysis and Dashboards module. This rule covers widget authoring, KPI math, and the APIs that serve aggregated data.
 
-## Data model & aggregation
+## Data model and aggregation
 
-* Sử dụng bảng `AnalyticsEvent` để lưu các hành động (task_completed, post_published, triage_event, etc.) với payload chi tiết; event được push bởi các service khác.  
-* Analysis Service đọc dữ liệu từ DB hoặc data warehouse; tính toán KPI theo batch (hàng ngày) hoặc realtime (khi cần).  
-* Tạo các Materialized view hoặc cache cho số liệu nặng (velocity, lead time) để đáp ứng nhanh cho Dashboard.  
-* Các widget cần specification: tên, loại biểu đồ, fields, filter khả dụng và cách tính toán.
+* Store events in the `AnalyticsEvent` table with detailed payloads for actions such as `task_completed`, `post_published`, and `triage_event`. Other services push events into this table.
+* The Analysis service reads from the primary database or the warehouse, and computes KPIs in daily batches or on demand for realtime views.
+* Create materialized views or caches for heavy metrics (velocity, lead time) so dashboards load quickly.
+* Every widget needs a specification that includes name, type, fields, filters, and calculation method.
 
 ## Widget definition
 
-* Mỗi widget được định nghĩa với schema: `{id, name, type, query, xField, yField, filters[]}`.  
-* `type` có thể là bar, line, pie, scatter, burndown.  
-* `query` phải mô tả nguồn dữ liệu (AnalyticsEvent hoặc bảng khác) và phép tính (sum, avg, count).  
-* `filters` quy định các tham số người dùng có thể thay đổi (teamId, projectId, date range, phaseId).
+* Define each widget with the schema `{ id, name, type, query, xField, yField, filters }`.
+* Supported `type` values include `bar`, `line`, `pie`, `scatter`, and `burndown`.
+* The `query` must identify the data source (AnalyticsEvent or related tables) and the aggregation (sum, average, count, etc.).
+* `filters` describe which parameters users can adjust (teamId, projectId, date range, phaseId).
 
 ## API contract
 
-* `GET /dashboards` trả về danh sách dashboards có sẵn của user và các widget thuộc về.  
-* `POST /dashboards` tạo dashboard mới `{name, widgets[]}`.  
-* `GET /widgets/{id}/data?filters=…` trả về dữ liệu cho widget (labels & series).  
-* `POST /widgets` cho phép user tạo widget mới (vNext); server kiểm tra query và chỉ cho phép phép tính an toàn (no heavy join).
+* `GET /dashboards` returns the dashboards available to the user plus their widgets.
+* `POST /dashboards` creates a dashboard from `{ name, widgets }`.
+* `GET /widgets/{id}/data?filters=...` returns label and series data for the requested widget.
+* `POST /widgets` allows users to create widgets (vNext). The server must validate each query and reject anything unsafe or overly expensive.
 
 ## KPI calculations
 
-* **Velocity**: tổng `estimate` của Task có state category `completed` trong mỗi Phase.  
-* **Lead time**: TB (`completedAt` – `createdAt`) cho các Task completed trong khoảng thời gian.  
-* **Triage time**: TB (`firstActionAt` – `createdAt`) cho các Task nhận action Accept/Decline.  
-* **Engagement rate**: (like + comment + share) / reach.  
-* **Posting cadence**: histogram thời gian đăng; tính số bài đăng theo giờ/ngày.
+* **Velocity**: Sum `estimate` for Tasks whose state category is `completed` within a Phase.
+* **Lead time**: Average of `completedAt - createdAt` for completed Tasks within the chosen window.
+* **Triage time**: Average of `firstActionAt - createdAt` for Tasks that received Accept or Decline decisions.
+* **Engagement rate**: `(likes + comments + shares) / reach`.
+* **Posting cadence**: Histogram of publish times; count posts per hour or per day.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không chạy truy vấn phân tích trực tiếp trên bảng production trong giờ cao điểm; phải sử dụng replica hoặc data warehouse.  
-* Không cho phép người dùng tự nhập câu lệnh SQL vào widget vì lý do bảo mật.  
-* Không hiển thị dữ liệu cá nhân nhạy cảm trên dashboard (email, số điện thoại); chỉ hiển thị số liệu tổng hợp.
+* Do not query production tables directly during peak hours; rely on read replicas or the warehouse.
+* Do not allow users to inject raw SQL into widget definitions.
+* Do not expose sensitive personal data (emails, phone numbers) on dashboards; only show aggregated metrics.
+

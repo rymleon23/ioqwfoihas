@@ -2,31 +2,32 @@
 
 ## Scope
 
-Áp dụng cho hệ thống thông báo (in‑app, email, Slack vNext) và activity log. Rule này giúp hệ thống AI hiểu cách gửi thông báo, debounce và log hoạt động.
+Applies to in-app notifications, email digests, Slack (vNext), and the activity log. This rule explains how to emit notifications, debounce noisy events, and capture an auditable history.
 
 ## Instructions
 
-* **Events** sinh ra thông báo gồm: Task created, Task updated (state change, assignee change, due date change), comment added, attachment added, ScheduledPost status change, mention `@user`, rule-based alerts (triage queue high).  
-* Khi có sự kiện, Notification Service tạo notification object với `id`, `recipientId`, `content`, `type` (in‑app/email), `read` (boolean), `createdAt`.  
-* In‑app notification hiển thị dưới dạng bell icon với badge; email được gửi qua dịch vụ mail (Sendgrid, SES…).  
-* Debounce: nếu nhiều sự kiện xảy ra liên tục cho cùng Task (ví dụ liên tục update trạng thái), gộp lại và gửi một thông báo tổng hợp sau X phút (configurable).  
-* Digest email: gửi email tổng hợp các thông báo chưa đọc mỗi ngày hoặc tuần (vNext).
+* Build notifications for events such as task creation, state changes, assignee or due date updates, new comments, new attachments, scheduled post status changes, `@user` mentions, and rule-driven alerts (for example, triage queue thresholds).
+* When an event fires, the Notification service creates an object with `id`, `recipientId`, `content`, `type` (in-app or email), `read`, and `createdAt`.
+* In-app notifications appear under the bell icon with a badge count. Emails are delivered via the mail provider (SendGrid, SES, etc.).
+* Debounce high-frequency changes. If multiple updates occur for the same task in a short window, batch them into a single notification sent after the configured delay.
+* Prepare digest emails that summarize unread notifications daily or weekly (roadmap for vNext).
 
 ## Activity log
 
-* Mỗi hành động quan trọng (create/update/delete) ghi vào Activity: `{id, actorId, entityType, entityId, action, timestamp, changes}`.  
-* Activity được hiển thị trong trang Task/Project/Strategic; có thể filter theo loại hành động (status change, comment, file attach).  
-* Audit log (ẩn) lưu chi tiết để đáp ứng yêu cầu chứng nhận SOC 2.
+* Record every important action (create, update, delete) in the Activity log with `{ id, actorId, entityType, entityId, action, timestamp, changes }`.
+* Surface Activity entries on Task, Project, and Strategic pages with filters for action type (status changes, comments, file attachments).
+* Future audit logging requirements target SOC 2 compliance; keep payloads immutable.
 
 ## Contracts
 
-* API `GET /notifications` trả về danh sách thông báo; có pagination, filter `read/unread`.  
-* API `PATCH /notifications/{id}` đánh dấu đã đọc; có thể đánh dấu tất cả.  
-* Notification Service cần module `scheduler` để gửi digest email định kỳ (cron job).  
-* Activity chỉ hiển thị cho người có quyền truy cập entity (Task/Project/Strategic).  
-* Khi gửi mention `@user`, phải validate user tồn tại và thuộc workspace.
+* API `GET /notifications` returns paginated notifications and supports filtering by read state.
+* API `PATCH /notifications/{id}` marks a notification as read. Provide a bulk "mark all" option.
+* The Notification service depends on the scheduler module to send digest emails on cron jobs.
+* Only show Activity entries to users who have permission to see the related entity.
+* Validate mentioned users belong to the workspace before sending `@user` notifications.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không gửi email cho mọi sự kiện; chỉ gửi khi quan trọng hoặc khi được user thiết lập.  
-* Không ghi đè Activity log; log cần immutable để phục vụ kiểm toán.
+* Do not send an email for every event; only email when the user opted in or when the event is high priority.
+* Do not mutate Activity log entries after they are written; treat them as immutable records for auditing.
+

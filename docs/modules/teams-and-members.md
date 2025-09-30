@@ -1,4 +1,6 @@
-﻿# Module: Teams & Members (RBAC)
+# Module: Teams & Members (RBAC)
+
+> Tham khảo sơ đồ quan hệ: [Workspace-Team-Membership ERD](../diagrams/workspace-team-membership.md).
 
 ## Mục đích
 Tổ chức người dùng theo Workspace/Team, quản lý vai trò và quyền truy cập để đảm bảo bảo mật dữ liệu.

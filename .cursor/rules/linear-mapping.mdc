@@ -1,26 +1,26 @@
-﻿# Rule: linear-mapping
+# Rule: linear-mapping
 
 ## Scope
 
-Áp dụng cho toàn bộ mã nguồn và tài liệu khi tham chiếu đến khái niệm cốt lõi; giúp chuẩn hoá từ ngữ và tránh nhầm lẫn. Rule này sẽ được dùng bởi hệ thống AI trong Cursor để tự động đổi tên và đưa ra gợi ý.
+Applies across all source code and documentation whenever core terminology is referenced. The rule keeps naming consistent and prevents confusion when mapping Linear concepts into Marketing OS.
 
 ## Instructions
 
-* Bảng thuật ngữ chuẩn nằm ở `docs/GLOSSARY.md`; luôn cập nhật/tra cứu tại đây trước khi đổi tên.
-* Khi sinh code hoặc cập nhật docs, nhớ attach `docs/GLOSSARY.md` và module liên quan trong `docs/modules/` để AI giữ đúng naming.
-
-* Bất kỳ khi nào xuất hiện từ **Issue**, tự động thay thế bằng **Task** trong UI và docs.  
-* Bất kỳ khi nào xuất hiện từ **Cycle**, tự động thay thế bằng **Phase**.  
-* Bất kỳ khi nào xuất hiện từ **Initiative**, tự động thay thế bằng **Strategic**.  
-* Tránh viết tắt không cần thiết; sử dụng chữ hoa đầu tiên khi là danh từ riêng (Project, Strategic).
+* The canonical glossary lives in `docs/GLOSSARY.md`. Check it before renaming or adding terminology.
+* When generating code or editing docs, attach `docs/GLOSSARY.md` and any relevant module docs from `docs/modules/` so AI keeps names aligned.
+* Replace **Issue** with **Task** in UI and documentation output.
+* Replace **Cycle** with **Phase**.
+* Replace **Initiative** with **Strategic**.
+* Avoid informal abbreviations. Capitalize proper nouns (Project, Strategic) consistently.
 
 ## Contracts
 
-* Trong code, vẫn có thể sử dụng các thư viện của Linear (như `linear-client`) nhưng kết quả trả về phải được map sang tên mới trước khi xuất ra giao diện.  
-* Khi ghi chú commit hoặc PR, nên sử dụng tên đã map để đồng nhất với UI.
+* You may keep third-party library names such as `linear-client`, but adapt outbound responses to the Marketing OS vocabulary before rendering them in the UI.
+* Use the mapped names in commit messages and pull requests to match what users see in the product.
 
-## Anti‑patterns
+## Anti-patterns
 
-* **Không**: “createIssue(title)” → “createTask(title)”.  
-* **Không**: “sprint” → “Phase” (nếu không thuộc dự án này).  
-* **Không**: đổi tên enum gốc của thư viện bên ngoài; chỉ map ở tầng adapter hoặc service.
+* Do not leave helpers named `createIssue`; rename them to `createTask` or wrap them in an adapter that presents the correct name.
+* Do not use "sprint" in this project; always say `Phase`.
+* Do not rename enums provided by external packages. Translate names at the adapter or service boundary instead.
+

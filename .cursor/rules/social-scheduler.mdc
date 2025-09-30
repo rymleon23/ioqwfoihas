@@ -2,37 +2,38 @@
 
 ## Scope
 
-Áp dụng cho module Social Integrations & Scheduler. Quy định cách kết nối tài khoản MXH, tạo ScheduledPost và xử lý queue, retry.
+Applies to the Social Integrations and Scheduler module. This rule explains how to connect social accounts, create `ScheduledPost` records, process the queue, and handle retries.
 
 ## UI contract
 
-* Trong Task Detail, tab “Schedule” hiển thị danh sách ScheduledPost và form tạo mới.  
-* Form gồm: chọn Social Account (dropdown), nhập caption (markdown), chọn media (picker từ Drive), chọn ngày giờ (datetime picker).  
-* Mỗi ScheduledPost hiển thị avatar/nền tảng, caption rút gọn, thời gian, status. Có nút hủy (cancel) hoặc chỉnh sửa nếu chưa đăng.  
-* Nếu đăng thành công, hiển thị link post và icon tick; nếu lỗi, hiển thị icon cảnh báo với tooltip mô tả.
+* In Task detail, expose a "Schedule" tab that lists scheduled posts and includes the creation form.
+* The form must provide: a dropdown to select the social account, a markdown caption input, a media picker backed by Drive, and a datetime picker for the scheduled time.
+* Each scheduled post displays the platform avatar or color, a short caption preview, scheduled time, and current status. Include actions to cancel or edit while the post is pending.
+* Successful posts show the published link with a check icon. Failed posts display a warning icon with a tooltip that describes the error.
 
 ## Backend contract
 
-* API `POST /scheduled-posts` nhận `{taskId, socialAccountId, caption, mediaRefs[], scheduledAt}`; service tạo bản ghi, kiểm tra quota và push vào queue.  
-* Worker xử lý queue: khi đến `scheduledAt`, gọi API mạng xã hội; cập nhật status, postResultId và url.  
-* API `PATCH /scheduled-posts/{id}` cho phép update caption, media, scheduledAt (nếu chưa đăng); khi update, phải cập nhật lại queue.  
-* API `DELETE /scheduled-posts/{id}` hủy một post; worker xoá job; status chuyển `canceled`.  
-* Nhận webhook từ các nền tảng (nếu có) tại `/social/webhook/{provider}`; dùng để cập nhật trạng thái.
+* API `POST /scheduled-posts` accepts `{ taskId, socialAccountId, caption, mediaRefs, scheduledAt }`, creates the record, validates quota, and enqueues the job.
+* A worker processes the queue. When `scheduledAt` arrives it calls the provider API, then updates status, `postResultId`, and `url`.
+* API `PATCH /scheduled-posts/{id}` updates caption, media, or scheduled time when the post has not yet published, and reschedules the job.
+* API `DELETE /scheduled-posts/{id}` cancels the post, removes the job, and sets status to `canceled`.
+* Receive provider webhooks at `/social/webhook/{provider}` and use them to update status or metadata.
 
-## Token & Permissions
+## Tokens and permissions
 
-* Token MXH lưu trong vault; chỉ Social Service có quyền giải mã.  
-* Cần refresh token định kỳ (sử dụng refresh token nếu có).  
-* Chỉ Owner/Admin có thể thêm/xóa SocialAccount; Member có thể sử dụng token có sẵn.  
-* Trước khi đăng, worker phải kiểm tra token còn hợp lệ và quyền cần thiết (đăng Page, đăng Story…).
+* Store social network tokens in a secrets vault; only the Social service may decrypt them.
+* Refresh tokens on a schedule when providers support it.
+* Only Owners or Admins can add or remove social accounts. Members may use existing tokens but cannot rotate them.
+* Before posting, verify the token is valid and has the required permissions (page publishing, story posting, etc.) for the intended action.
 
-## Retry & Error handling
+## Retry and error handling
 
-* Sử dụng thư viện queue hỗ trợ retry và backoff (ví dụ BullMQ).  
-* Định nghĩa số lần retry tối đa (mặc định 3); với lỗi không recoverable (ví dụ invalid media) chuyển status `failed` ngay.  
-* Nếu mạng xã hội trả về lỗi rate limit, worker nên thử lại sau thời gian khuyến nghị (thông qua header `Retry‑After`).
+* Use a queue library that supports retry and backoff (for example BullMQ).
+* Set a maximum number of retries (default three). For non-recoverable errors such as invalid media, mark the post as `failed` immediately.
+* If the platform returns a rate limit error, requeue the job using the provider `Retry-After` guidance.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không lưu token trong code nguồn hoặc config file; phải sử dụng secrets management.  
-* Không call API MXH trực tiếp từ frontend; luôn thông qua backend để bảo mật và kiểm soát.
+* Do not store tokens in source code or static config files; use managed secrets.
+* Do not call provider APIs directly from the frontend. Always go through backend services for security and control.
+

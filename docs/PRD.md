@@ -1,4 +1,4 @@
-﻿# Linear-style Marketing OS – PRD
+# Linear-style Marketing OS – PRD
 
 ## Tầm nhìn
 Chúng ta xây dựng một hệ thống quản lý công việc và sản xuất nội dung lấy cảm hứng từ Linear nhưng được bản địa hóa cho agency marketing. Sản phẩm cho phép đội ngũ lập kế hoạch, thực thi và phân tích công việc một cách mạch lạc, đồng thời tích hợp AI hỗ trợ viết nội dung, kết nối mạng xã hội, kho tài nguyên/RAG và dashboard phân tích hiệu quả. Mục tiêu là tạo ra "Marketing OS" giúp tăng tốc độ sản xuất, nâng cao chất lượng nội dung và đo lường hiệu quả trên cùng một nền tảng.

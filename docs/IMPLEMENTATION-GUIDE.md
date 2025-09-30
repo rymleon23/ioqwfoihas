@@ -1,4 +1,4 @@
-﻿# Implementation Guide (Cursor + Supabase + Vercel)
+# Implementation Guide (Cursor + Supabase + Vercel)
 
 Hướng dẫn triển khai nhanh dựa trên vertical slice, tận dụng repo Circle hiện có.
 

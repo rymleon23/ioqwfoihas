@@ -1,33 +1,39 @@
-﻿# Rule: base
+# Rule: base
 
 ## Scope
 
-Áp dụng cho toàn bộ dự án, trừ khi có rule module override trong thư mục con. Đây là rule gốc mô tả mục tiêu và conventions chung.
+Applies to the entire Marketing OS project unless a module specific rule in a subdirectory overrides it. This is the canonical rule set for overall goals and conventions.
 
 ## Project intent
 
-* Xây dựng một Marketing OS dựa trên Linear với các khái niệm đổi tên: Task (Issue), Project, Strategic (Initiative), Phase (Cycle), Triage.  
-* Lớp mở rộng bao gồm AI Studio (nội dung & phân tích), Social Integrations với scheduler, Drive Hub & RAG, Analysis dashboards.  
-* Ưu tiên trải nghiệm người dùng nhanh, phím tắt, UI rõ ràng, tối ưu hiệu năng.
+* Build a Marketing OS on top of the Linear mental model with renamed primitives: Task (Issue), Project, Strategic (Initiative), Phase (Cycle), Triage.
+* Ship an extensible surface that includes AI Studio (content and analysis), Social Integrations with scheduler, Drive Hub and Retrieval-Augmented Generation, and Analysis dashboards.
+* Prioritize fast, high-quality user experience with clear UI and efficient performance.
 
 ## Coding conventions
 
-* **Ngôn ngữ**: TypeScript cho cả frontend (React) và backend (Node/Express hoặc NestJS).  
-* **Style**: sử dụng ESLint & Prettier; follow Airbnb style guideline với vài tuỳ chỉnh.  
-* **API**: REST cho các endpoint chính; GraphQL ở các module phức tạp nếu cần; luôn trả về JSON có schema rõ ràng.  
-* **State**: sử dụng Zustand (hoặc Redux Toolkit) cho state cục bộ, React Query cho data fetching.  
-* **Test**: viết test (unit/integration) cho mỗi module; sử dụng Jest + Testing Library.  
-* **Naming**: tuân theo mapping Issue→Task, Cycle→Phase, Initiative→Strategic trong code và UI.
+* **Language**: TypeScript for both frontend (React) and backend (Node/Express or NestJS).
+* **Style**: ESLint and Prettier aligned with the Airbnb guide plus targeted overrides.
+* **API**: REST for primary endpoints; adopt GraphQL only for complex modules; always return JSON with explicit schemas.
+* **State**: Use Zustand (or Redux Toolkit) for client state, and React Query for data fetching.
+* **Test**: Provide unit and integration tests for every module using Jest and Testing Library.
+* **Naming**: Follow the mapping Issue -> Task, Cycle -> Phase, Initiative -> Strategic across code and UI.
 
 ## Documentation references
 
 * Primary PRD: `docs/PRD.md`
-* Architecture: `docs/ARCHITECTURE.md`, data model: `docs/DATA-MODEL.md`, UX: `docs/UX-UI.md`
+* Architecture: `docs/ARCHITECTURE.md`; data model: `docs/DATA-MODEL.md`; UX: `docs/UX-UI.md`
 * Glossary: `docs/GLOSSARY.md` for canonical terminology mapping.
 * Feature specs: attach the relevant file under `docs/modules/` when working on a module.
-* Delivery guidance: `docs/IMPLEMENTATION-GUIDE.md` and `docs/PROJECT-PLAN.md` for sequencing & responsibilities.
+* Delivery guidance: `docs/IMPLEMENTATION-GUIDE.md` and `docs/PROJECT-PLAN.md` for sequencing and responsibilities.
 
 ## Examples
 
-* Tạo component TaskCard tại `apps/web/components/TaskCard.tsx`, hiển thị title, assignee, labels, priority.  
-* Khi gọi API tạo Task, endpoint là `POST /tasks` thay vì `/issues`.
+* Create a TaskCard component at `apps/web/components/TaskCard.tsx` that displays title, assignee, labels, and priority.
+* When calling the API to create a Task, use the endpoint `POST /tasks` instead of `/issues`.
+
+## Task management rules
+
+* **Task list creation**: Maintain a single prioritized backlog per workspace in Linear-style boards. Every list row must specify the team, owner (or unassigned), current workflow state, and the latest status update timestamp before the daily standup.
+* **Task detail generation**: When creating a Task, confirm product or customer value, capture acceptance criteria in bullet form, link supporting documents, list blockers and dependencies, and note expected delivery (due date or phase) so the work stays traceable.
+

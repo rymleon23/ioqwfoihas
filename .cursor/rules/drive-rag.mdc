@@ -2,31 +2,32 @@
 
 ## Scope
 
-Áp dụng cho module Drive Hub & RAG. Rule này hướng dẫn index file, permission và truy vấn vector store để hỗ trợ AI trong việc lấy thông tin tham chiếu.
+Applies to the Drive Hub and Retrieval-Augmented Generation module. This rule explains how to index files, enforce permissions, and query the vector store to provide references for AI features.
 
 ## Indexing instructions
 
-* Service indexer quét thư mục Drive theo chu kỳ (mặc định 5 phút) và khi có sự kiện file mới/chỉnh sửa.  
-* Với file văn bản (txt, md, docx, pdf), trích xuất văn bản thuần, tách đoạn và tạo embedding.  
-* Với file bảng tính, chỉ index tên sheet và header, không index dữ liệu chi tiết (để bảo mật).  
-* Các file media (ảnh/video) chỉ index metadata (tên, tag) và đường dẫn; RAG không sử dụng nội dung media trực tiếp.  
-* Lưu `vectorId` trong DB để truy vấn nhanh.  
-* Tôn trọng quyền: chỉ index file mà user/gửi yêu cầu có quyền xem; index phải tách theo workspace/team.
+* The indexing service scans the Drive directory on a schedule (default every five minutes) and whenever files are created or updated.
+* For document formats (txt, md, docx, pdf) extract plain text, chunk it, and compute embeddings.
+* For spreadsheets, index sheet names and headers only; skip row-level data to avoid leaking sensitive information.
+* For media files (images or video) index metadata only (name, tags, duration). Do not inject raw media content into embeddings.
+* Store the resulting `vectorId` in the database so queries can fetch matches quickly.
+* Respect permissions during indexing: only process files the requesting user can access, and partition embeddings by workspace or team boundary.
 
 ## Query instructions
 
-* AI Service khi nhận nguồn `drive://folderId` sẽ lấy tất cả file con (đệ quy) trong folder, gửi vectorId sang vector store và nhận top K kết quả.  
-* Với nguồn `workspace://` hoặc `team://`, giới hạn tìm kiếm trong phạm vi workspace/team tương ứng.  
-* Sau khi lấy embedding, AI Service cần lấy nội dung gốc từ DriveFile để chèn vào prompt.  
-* Citation: luôn đính kèm `name`, `url` (hoặc id) của file trong citation list.
+* When the AI service receives a source like `drive://folderId`, gather all descendant files from that folder and request the top-K matches from the vector store.
+* For `workspace://` or `team://` sources, restrict the search scope to the matching workspace or team.
+* After retrieving embedding matches, fetch the original file content from `DriveFile` to build the final prompt context.
+* Include citations with the file `name` and `url` (or id) for each referenced document.
 
-## Permission
+## Permission rules
 
-* Tại thời điểm query RAG, AI Service kiểm tra rằng người dùng gọi API vẫn có quyền đọc file; nếu không, bỏ file ra khỏi kết quả.  
-* DriveAdmin có thể phân cấp quyền truy cập tới từng folder; indexer cập nhật danh sách permission theo thư mục cha.
+* At query time, re-check that the current user still has access to each file. Drop files that fail the permission check.
+* Drive administrators can grant folder-level access; the indexer keeps the inherited permission list in sync.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không giữ cache embedding cũ khi file được cập nhật; luôn làm mới embedding khi `modifiedAt` thay đổi.  
-* Không truy vấn vector store mà không giới hạn phạm vi; luôn phải đi kèm nguồn (workspace/team/project).  
-* Không trả về nội dung file media trong prompt; chỉ dùng metadata để tham khảo.
+* Do not reuse stale embeddings when a file changes. Recompute embeddings whenever `modifiedAt` updates.
+* Do not run unbounded vector searches; always filter by workspace, team, or project context.
+* Do not place raw media content directly in prompts; supply metadata instead.
+

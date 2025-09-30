@@ -2,24 +2,26 @@
 
 ## Scope
 
-This rule applies to the Circle project files that currently import data from `mock-data/*` or use the prototype Zustand store. It guides the assistant to remove dependencies on in‑memory mocks and replace them with calls to the real backend.
+This rule applies to Marketing OS files that still import data from `mock-data/*` or rely on the prototype Zustand store. It explains how to remove in-memory mocks and replace them with real backend calls.
 
-## Instruction
+## Instructions
 
-* **No mock data** — Do not import or reference any files from `mock-data/*` in new or updated code. These files were used in the Circle prototype to provide static lists of tasks, teams, projects and cycles. Similarly, avoid using the existing Zustand store functions for CRUD actions.
-* **Use Supabase** — For all data operations, call the Supabase database through `@supabase/supabase-js`. For example, to load tasks for a team:
+* **No mock data**: Do not import or reference anything under `mock-data/*` in new or updated code. Those files existed only for the prototype and provided static lists for tasks, teams, projects, and phases. Likewise, avoid using the legacy Zustand store functions for CRUD operations.
+* **Use Supabase**: For all data access, interact with Supabase through `@supabase/supabase-js`. Example:
   ```ts
-  const { data: tasks, error } = await supabase.from('task')
+  const { data: tasks, error } = await supabase
+    .from('task')
     .select('*')
     .eq('team_id', teamId);
   ```
-  To create a new record, call `.insert([...])`, and to update an existing record call `.update({...}).eq('id', id)`. Remember to refresh the client cache (e.g. by invalidating TanStack Query queries) after mutations.
-* **Server state** — Prefer using a data fetching library like TanStack Query or SWR to manage server state. Do not replicate Supabase data in a global store; instead, fetch data where it is needed and cache it using the query library.
-* **Action handlers** — Replace calls such as `removeNotification`, `addIssue`, or `updateProject` with functions that perform the corresponding mutation on the Supabase tables and then refresh the affected queries.
-* **Preserve UI** — The structure and styling of pages and components should remain the same. Only the data sources and side effects should change.
+  Use `.insert([...])` to create records and `.update({...}).eq('id', id)` to modify them. After mutations, invalidate TanStack Query caches (or equivalent) so the UI refreshes.
+* **Server state**: Prefer TanStack Query or SWR to manage server state. Do not duplicate Supabase data in a global store; fetch where needed and cache with the query library.
+* **Action handlers**: Replace helpers such as `removeNotification`, `addIssue`, or `updateProject` with functions that perform actual Supabase mutations and then refresh the affected queries.
+* **Preserve UI**: Keep the existing layout and styling intact. Only switch data sources and side effects to the real APIs.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Importing anything from `mock-data/*` or referencing the prototype store in production code.
+* Importing any module from `mock-data/*` or referencing the prototype store in production code.
 * Logging actions to the console instead of performing real API calls.
-* Maintaining duplicate copies of the same data in multiple stores; always treat Supabase as the single source of truth.
+* Maintaining parallel caches that disagree with Supabase; treat Supabase as the source of truth.
+

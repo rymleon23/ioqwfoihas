@@ -2,33 +2,34 @@
 
 ## Scope
 
-Áp dụng cho phần quản lý Team, Member và phân quyền (RBAC). Rule này định nghĩa role matrix và yêu cầu mã tạo API/middleware kiểm tra quyền người dùng theo role.
+Applies to team and member management plus all role-based access control (RBAC) checks. This rule defines the role matrix and the authorization middleware required for Marketing OS.
 
 ## Role matrix
 
-| Role    | Team settings | Manage members | Create/Edit Task/Project | View reports |
-|--------|--------------|---------------|---------------------------|-------------|
-| Owner  | ✓            | ✓             | ✓                         | ✓           |
-| Admin  | ✓            | ✓             | ✓                         | ✓           |
-| Member | ✗            | ✗             | ✓                         | ✓           |
-| Guest  | ✗            | ✗             | ✗ (chỉ comment)           | ✓ (giới hạn) |
+| Role   | Team settings | Manage members | Create/Edit Task or Project | View reports |
+|--------|---------------|----------------|------------------------------|--------------|
+| Owner  | Yes           | Yes            | Yes                          | Yes          |
+| Admin  | Yes           | Yes            | Yes                          | Yes          |
+| Member | Limited       | Limited        | Yes                          | Yes          |
+| Guest  | Limited       | Limited        | Comment only                 | Limited      |
 
 ## Instructions
 
-* Middleware `checkPermission(user, resource, action)` phải tra cứu role của user trong Membership để quyết định cho phép/không.  
-* Khi tạo Team, role `Owner` gán cho user tạo; Owner có tất cả quyền (quản lý Team, members, cài đặt).  
-* Một Member có thể thuộc nhiều Teams với role khác nhau.  
-* Guest chỉ được gắn vào Project cụ thể; API cần kiểm tra mapping Membership/Project trước khi trả dữ liệu.  
-* Role matrix có thể mở rộng (ví dụ “Viewer”); nhưng phải cập nhật rule và permission tương ứng.
+* Middleware `checkPermission(user, resource, action)` must look up the user's role in membership records and decide whether to allow the request.
+* The user who creates a team becomes the `Owner`. Owners have full access to settings, member management, and configuration.
+* A member may belong to several teams and hold different roles per team.
+* Guests can only be attached to specific projects. APIs must validate the membership-to-project mapping before returning data.
+* If you add new roles (for example `Viewer`), update this rule and the permission matrix at the same time.
 
 ## Contracts
 
-* API trả về 403 (Forbidden) khi người dùng không có quyền; không trả 404 để tránh lộ tồn tại tài nguyên.  
-* Audit log phải ghi lại mọi thay đổi role (ai đổi, lúc nào, trước/sau).  
-* UI phải ẩn hoặc disable nút hành động nếu người dùng không đủ quyền.  
-* Khi xóa Member khỏi Team, phải cập nhật hoặc huỷ assignment Task liên quan (cấu hình).
+* Return HTTP 403 (Forbidden) when a user lacks permissions. Do not mask the resource with 404.
+* Log every role change in the audit trail, capturing who made the change, when, and the before/after values.
+* The UI must hide or disable actions that the current user cannot perform.
+* When removing a member from a team, update or remove any task assignments linked to that user.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không kiểm tra quyền ở tầng router mà nên triển khai middleware để tái sử dụng.  
-* Không lưu role trong JWT; luôn tra cứu role từ DB để phản ánh thay đổi kịp thời.
+* Do not duplicate permission checks in every route handler; centralize them in middleware.
+* Do not store roles inside JWTs. Always read the latest role from the database so changes take effect immediately.
+

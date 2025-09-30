@@ -2,31 +2,32 @@
 
 ## Purpose
 
-Định nghĩa khuôn mẫu (blueprint) cho file `.mdc` và `.md` được sử dụng trong dự án. Tài liệu này giúp đảm bảo rằng các rule và tài liệu được viết nhất quán và dễ đọc đối với AI.
+Defines the template used for `.mdc` and `.md` files in this repository. Keeping the format consistent helps both humans and Codex consume the rules without confusion.
 
 ## Structure
 
-Mỗi file `.mdc` nên bao gồm các section chính sau (có thể bỏ qua nếu không áp dụng):
+Each `.mdc` file should include the following sections when they apply:
 
-1. **Title** – `# Rule: [tên]` hoặc `# Module: [tên]` ở dòng đầu tiên.  
-2. **Scope** – mô tả phạm vi áp dụng (module, toàn dự án).  
-3. **Purpose/Instructions** – giải thích mục tiêu hoặc hướng dẫn cụ thể cho AI/Developers.  
-4. **Contracts** – (optional) liệt kê các cam kết API, UI hoặc logic mà module phải tuân theo.  
-5. **Examples** – (optional) ví dụ minh hoạ sử dụng rule.  
-6. **Anti‑patterns** – (optional) mô tả hành vi không mong muốn cần tránh.  
-7. **Metrics & Telemetry** – (optional) liệt kê các chỉ số cần theo dõi.  
-8. **Last updated** – (optional) thông tin cập nhật gần nhất.
+1. **Title** - start with `# Rule: [name]` or `# Module: [name]`.
+2. **Scope** - describe where the rule applies (module or entire project).
+3. **Purpose/Instructions** - explain the goal and provide actionable guidance for AI or developers.
+4. **Contracts** - optional; document API, UI, or logic commitments that must stay stable.
+5. **Examples** - optional; add concrete usage examples.
+6. **Anti-patterns** - optional; note behaviors to avoid.
+7. **Metrics and Telemetry** - optional; list required logging or KPIs.
+8. **Last updated** - optional; record when the rule was last revised.
 
 ## Writing guidelines
 
-* Sử dụng Markdown thuần, không có HTML.  
-* Phân chia section rõ ràng bằng heading (`##`) hoặc bullet; không viết đoạn dài quá 20 dòng.  
-* Sử dụng bảng khi cần liệt kê role matrix hoặc mapping.  
-* Khi bổ sung thông tin quan trọng (ví dụ rule mới), cập nhật file này và ghi rõ ngày.  
-* Luôn giữ nội dung ngắn gọn, súc tích; tránh lặp lại thông tin đã có ở file khác.
+* Use plain Markdown; avoid embedding HTML.
+* Split content into headings (`##`) and succinct bullets. Keep paragraphs short (no more than about 20 lines).
+* Use tables for role matrices or mappings when needed.
+* Update this file when you add important guidance or new modules.
+* Write in clear, direct language and avoid repeating information that already exists in other rules.
 
 ## Updating rules
 
-* Khi phát hiện AI hoặc developer vi phạm một rule, hãy cập nhật file `.mdc` liên quan với ví dụ mới hoặc “anti‑pattern” rõ ràng.  
-* Nếu một rule không còn phù hợp, di chuyển nội dung vào file Lịch sử/Deprecated và cập nhật tham chiếu.  
-* Không xoá rule gốc nếu người khác vẫn đang sử dụng; thay vào đó, tạo rule mới với tên khác và cập nhật liên kết.
+* When AI or developers violate a rule, update the related `.mdc` file with clearer instructions or add an anti-pattern that explains the failure.
+* If a rule becomes obsolete, move it to a history or deprecated folder instead of deleting it outright, and update cross-references.
+* Do not remove foundational rules that other contributors still rely on; create a new rule with a distinct name and link it if behavior changes.
+

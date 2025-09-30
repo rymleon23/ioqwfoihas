@@ -1,4 +1,4 @@
-﻿# Glossary
+# Glossary
 
 Danh sách thuật ngữ chuẩn hoá giữa UI (tiếng Việt), code/schema và mô tả ngắn. Dùng làm nguồn duy nhất cho naming trong UI, docs và code.
 

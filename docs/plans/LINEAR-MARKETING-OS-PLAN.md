@@ -1,4 +1,4 @@
-﻿# Linear-style Marketing OS Implementation Plan
+# Linear-style Marketing OS Implementation Plan
 
 ## 0. Plan Validation Snapshot
 - Reviewed updated docs (`docs/PRD.md`, `ARCHITECTURE.md`, `DATA-MODEL.md`, `IMPLEMENTATION-GUIDE.md`, modules/*) and archive/gpt-gen-prd.md; requirements are consistent with the original high-level roadmap but now include richer rule attachments, ai_agent_profile schema, and detailed module acceptance criteria.

@@ -1,0 +1,115 @@
+# Rule: task-generation
+
+## Scope
+Applies whenever Codex (running in the Codex CLI) is asked to draft Linear-style tasks for the Marketing OS roadmap. Use alongside `base.mdc`; module-specific rules continue to override feature details.
+
+## Required inputs before prompting
+- Identify the relevant milestone or module from `docs/plans/LINEAR-MARKETING-OS-PLAN.md` (example: `P1.3 Task List and Detail`). Quote the identifier inside the prompt you send to Codex.
+- Attach or summarize the supporting specs that govern the work (PRD sections, module docs in `docs/modules/`, data model excerpts, architecture notes) so Codex reasons from the source of truth.
+- Provide the latest known constraints: current phase, target release window, available roles, open dependencies, and any partial implementation notes already in the repo.
+- If any required reference is missing or clearly outdated, note it as a blocker inside the prompt rather than inventing details.
+
+## Task generation workflow
+1. Anchor the outcome: restate the customer or business problem, the desired capability, and success signals in one or two sentences before asking Codex for tasks.
+2. Map deliverables: direct Codex to break the outcome into concrete deliverables (UI, API, data, automation, QA, documentation). Require that each deliverable ties back to a section in the plan or spec.
+3. Sequence intentionally: instruct Codex to order tasks by dependency (data -> API -> UI -> QA -> enablement). Flag cross-team or external dependencies explicitly. When module refinements overlap, name the module that drives primary acceptance criteria first so Codex applies overrides in that order.
+4. Right-size the work: enforce that each task should be completable within one to two working days by a single contributor. Longer efforts must be split.
+5. Surface risks and validation: require Codex to note assumptions, open questions, and recommended verification (tests, feature flags, rollout steps) per task. When specs are silent on testing or analytics, have Codex fall back to the standard QA and telemetry expectations for that surface (unit + integration coverage, instrumentation, rollout checks).
+6. Close the loop: end every generation request by asking Codex for a sanity check summary (what is ready, blocked, risky) so planning gaps are visible.
+
+## Output contract for each task block
+- Title: `Phase | Area | Actionable outcome` (example: `P1.3 | UI | Ship task detail drawer`).
+- Why: one sentence tying the task to user or business value.
+- Acceptance Criteria: three to six bullets phrased as observable behaviors (Given/When/Then where helpful).
+- Implementation Notes: key modules, APIs, tables, or components that must change; reference file paths when known.
+- Dependencies: enumerate upstream tasks, migrations, approvals, or assets. Mark `None` explicitly when clear.
+- References: bullet list of doc excerpts or commit hashes (use repo-relative paths).
+- Estimate and Owner: suggested role (`FE`, `BE`, `Full-stack`, `Design`, `QA`) and effort. Default to S/M/L sizing; use hours only when the source plan demands it, and never mix formats within the same generation. Leave blank only if unknown.
+- Validation: required tests, QA flows, or analytics checks to declare done.
+- Risks and Mitigations: concise list of pitfalls and proposed guardrails.
+
+## Module-specific refinements
+When your Codex prompt targets one of the following areas, bake these checks into the acceptance criteria, implementation notes, and validation steps. If multiple modules apply, declare the highest-risk module first (data integrity, compliance, or user safety takes precedence) and list the rest so Codex applies the overrides in priority order.
+
+- Teams & Members RBAC (`docs/modules/teams-and-members.md`)
+  - Validate team key format and uniqueness, capture invite status transitions, and log every role change in audit tables.
+  - Enforce permission boundaries (member vs guest) in both API policies and UI affordances.
+  - Confirm destructive actions (team deletion/disable) trigger notifications and audit entries.
+- Workflow & Status (`docs/modules/workflow-status.md`)
+  - Require guard rules to fail fast with clear messages in UI and API.
+  - Prevent deletion of in-use states and guarantee history records list previous and next state with actor.
+  - Cover blocked state indicators and SLA pause handling.
+- Phases (Cycles) (`docs/modules/phases.md`)
+  - Ensure overlapping phase windows are rejected per team.
+  - Specify carry-over logging behavior and reporting accuracy thresholds (<5% variance).
+  - Include lock/reopen flows and their effect on edits and API responses.
+- Triage Inbox (`docs/modules/triage-inbox.md`)
+  - Insist all actions persist `triage_event` records with metadata.
+  - Mention SLA badge updates, rule toggle previews, and merge confirmation UX.
+  - Call out duplicate detection heuristics and manual overrides.
+- Projects & Strategic (`docs/modules/projects-strategic.md`)
+  - Tie acceptance criteria to health calculations, milestone progress sync, and CSV export availability.
+  - Capture cross-linking with tasks and dependencies on strategy ownership.
+- AI Studio (`docs/modules/ai-studio.md`)
+  - Log every generation (model, latency, sources) and block unauthorized submissions.
+  - Surface retry/feedback loops and analytics instrumentation requirements.
+  - Reference `ai_generation` persistence and task comment updates.
+- Drive Hub & RAG (`docs/modules/drive-rag.md`)
+  - Confirm incremental indexing, versioning, and permission filtering across sync jobs.
+  - Note embedding refresh triggers and usage tracking for AI contexts.
+- Social Scheduler (`docs/modules/social-scheduler.md`)
+  - Include secure token storage, cron tick coverage, and webhook idempotency checks.
+  - Detail retry/backoff strategy and notification loops when publishing fails.
+- Analysis Dashboards (`docs/modules/analysis-dashboards.md`)
+  - Require data freshness SLAs, sample validation against source metrics, and cross-widget filter consistency.
+  - Mention ETL/cron ownership and observability hooks for load time and error rate.
+
+## Anti-patterns to guard against
+- Vague tasks such as `Implement backend` without scope, acceptance criteria, or references.
+- Mixing multiple deliverables (frontend plus backend plus QA) into a single task without explaining dependencies or hand-offs.
+- Omitting links to authoritative docs, leading Codex to hallucinate requirements.
+- Forgetting to call out data migrations, Supabase RLS updates, or analytics logging when features touch the persistence layer.
+- Leaving out QA or validation steps, which causes regressions during release gates.
+
+## Prompt template (adapt for Codex)
+```
+Context: {phase or module ID from plan}
+Goal: {desired outcome, user or job story, success metric}
+Constraints: {timebox, tech constraints, known blockers}
+Attached refs: {list of docs, file paths, design links}
+
+Codex, please produce Linear-ready task blocks that follow the task-generation rule. Ensure:
+- ordered by dependency
+- each task fits one to two engineering days
+- include validation, risks, and references per block
+- finish with a readiness summary (ready, blocked, risky)
+```
+
+## Example follow-up questions for refinement
+- "Which tasks are blocked by Supabase schema work, and what migration is required?"
+- "List any missing docs or specs the team must create before development can start."
+- "What analytics or logging needs to be added to monitor this feature after launch?"
+
+## Example task block
+````
+Title: P1.3 | UI | Ship task detail drawer
+Why: Surface task metadata without forcing navigation changes so project leads spot blockers faster.
+Acceptance Criteria:
+- Given an active task with subtasks, when a user opens the detail drawer, then subtasks render with status pills and assignee avatars.
+- When backend returns a 403, then the drawer shows the RBAC error copy from docs/ui/errors.md.
+Implementation Notes:
+- Update app/features/tasks/detail-drawer.tsx to request `task.assignees` and `task.subtasks`.
+- Coordinate with BE task `P1.3 | API | Extend task detail query` for the new fields.
+Dependencies: P1.3 | API | Extend task detail query
+References:
+- docs/plans/LINEAR-MARKETING-OS-PLAN.md#L120
+- docs/modules/workflow-status.md
+Estimate and Owner: FE, S
+Validation:
+- Add Playwright coverage for drawer open/close and error state.
+- Ensure analytics `task_detail_opened` fires with `task_id` and `source=drawer`.
+Risks and Mitigations:
+- Risk: API payload size grows; Mitigation: confirm response stays <500ms in staging.
+````
+
+

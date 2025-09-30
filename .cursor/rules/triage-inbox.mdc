@@ -2,25 +2,26 @@
 
 ## Scope
 
-Áp dụng cho chức năng Triage (Inbox) trong Team. Tập trung vào logic Accept/Decline/Merge/Snooze/Assign, duplicate detection và rule tự động.
+Applies to the Triage Inbox feature within teams. Focus on Accept, Decline, Merge, Snooze, Assign flows, duplicate detection, and automation rules.
 
 ## Instructions
 
-* Khi Task mới được tạo từ bất kỳ nguồn nào mà không có `stateId`, mặc định gán trạng thái đầu tiên của workflow Team (ví dụ `Backlog`) và đánh dấu là “In Triage”.  
-* `Accept` phải gán `assignee` hoặc để trống, set `stateId` theo config (ví dụ “To Do”) và bỏ cờ triage.  
-* `Decline` yêu cầu nhập `reason`; lưu thành comment và cập nhật status của Task thành `Canceled` (hoặc state thuộc category canceled).  
-* `Merge` nhận `targetTaskId`; di chuyển comment, attachments sang target; cập nhật relation `duplicate`.  
-* `Snooze` lưu thời gian `snoozeUntil`; hệ thống không hiển thị Task trong Inbox cho tới khi hết thời gian.  
-* `Assign` cho phép chỉ định team và assignee (nếu khác team, cần đảm bảo user thuộc team đó).  
-* Auto‑label/assign/duplicate detection được định nghĩa trong bảng `TriageRule` và thực thi theo thứ tự ưu tiên; rule có thể tạm tắt.
+* When a new task is created without a `stateId`, assign the team's default initial state (for example `Backlog`) and mark the task as `inTriage`.
+* `Accept` must assign an owner (or leave explicit unassigned), set the state according to configuration (for example `To Do`), and clear the triage flag.
+* `Decline` requires a `reason`, stores that reason as a comment, and updates the task state to the canceled category.
+* `Merge` takes a `targetTaskId`, moves comments and attachments to the target, and records a `duplicate` relation.
+* `Snooze` stores `snoozeUntil`; the task leaves the inbox until the time expires.
+* `Assign` allows selecting a team and assignee. If the task moves to a new team, confirm the user belongs to that team.
+* Automation rules (`TriageRule`) can auto-label, assign, or flag duplicates. Execute rules in priority order and stop after the first match when designed as mutually exclusive.
 
 ## Contracts
 
-* Accept/Decline/Merge/Snooze/Assign phải log vào TriageEvent với action, performedBy, timestamp và metadata.  
-* Khi Apply rule, nếu có nhiều rule trùng, áp dụng rule đầu tiên; rule nào match xong thì dừng.  
-* Duplicate detection tính toán dựa trên tiêu đề & mô tả; trả về danh sách Task gần nhất. Không tự động merge; chỉ gợi ý.
+* Every Accept, Decline, Merge, Snooze, or Assign action must create a `TriageEvent` with action, performer, timestamp, and metadata.
+* When applying rules, honor priority. After a rule fires, proceed to the next only if the configuration allows chaining.
+* Duplicate detection runs similarity checks on title and description and returns matching tasks. Never auto-merge; prompt users to confirm.
 
-## Anti‑patterns
+## Anti-patterns
 
-* Không cập nhật trực tiếp state/assignee mà bỏ qua TriageEvent; phải luôn ghi TriageEvent để phục vụ báo cáo.  
-* Không xoá Task khỏi Inbox mà không xử lý action; Snooze cần thời gian rõ ràng.
+* Do not update task state or assignee without recording a `TriageEvent`. The event log powers reporting.
+* Do not hide tasks in the inbox without an explicit action. Snooze requires a clear expiration.
+

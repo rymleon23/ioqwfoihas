@@ -1,4 +1,4 @@
-﻿# Mô hình dữ liệu
+# Mô hình dữ liệu
 
 Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chính, timestamp ISO-8601 (UTC) và tuân thủ naming snake_case (DB) / camelCase (code). RLS bật cho mọi bảng liên quan workspace/team.
 
@@ -12,7 +12,7 @@ Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chí
 - `id` UUID
 - `workspace_id` FK → workspace
 - `name`
-- `key` (AIM2…)
+- `key` (AIM2)
 - `workflow_id` FK → workflow
 - `default_phase_id` FK → phase
 
@@ -47,6 +47,8 @@ Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chí
 ### AI & Content
 - `ai_generation` (`id`, `task_id`, `agent`, `prompt`, `sources`, `output_markdown`, `model`, `latency_ms`, `created_by`, `created_at`)
 - `ai_agent_profile` (`id`, `workspace_id`, `name`, `description`, `prompt`, `default_sources`)
+- `marketing_content` (`id`, `workspace_id`, `source_type` ai/manual/import, `source_id`, `title`, `summary`, `body`, `embedding vector(1536)`, `metadata`, `created_at`, `updated_at`)
+- `marketing_content_chunk` (`id`, `content_id`, `sequence_index`, `text`, `embedding vector(1536)`, `token_count`)
 
 ### Social Scheduling
 - `social_account` (`id`, `team_id`, `platform`, `display_name`, `secret_ref`)
@@ -55,8 +57,13 @@ Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chí
 
 ### Drive Hub & RAG
 - `drive_folder` (`id`, `workspace_id`, `external_id`, `name`, `parent_id`, `path`)
-- `drive_file` (`id`, `folder_id`, `external_id`, `name`, `mime_type`, `size`, `version`, `synced_at`, `embedding`)
+- `drive_file` (`id`, `folder_id`, `workspace_id`, `external_id`, `name`, `mime_type`, `size`, `version`, `synced_at`, `embedding vector(1536)`, `metadata`)
 - `task_attachment` (`id`, `task_id`, `type` drive/upload/link, `drive_file_id`, `url`, `metadata`)
+
+### Custom Field (roadmap)
+- `custom_field_definition` (`id`, `workspace_id`, `entity_type`, `key`, `label`, `description`, `field_type` text/number/date/single_select/multi_select/boolean/reference, `config_json`, `is_required`, `is_archived`, `created_by`, `created_at`)
+- `custom_field_option` (`id`, `field_id`, `value`, `label`, `color`, `order_index`, `is_archived`)
+- `custom_field_value` (`id`, `workspace_id`, `entity_type`, `entity_id`, `field_id`, `value_text`, `value_number`, `value_boolean`, `value_date`, `value_json`, `created_at`, `updated_at`)
 
 ### Analytics
 - `analytics_event` (`id`, `workspace_id`, `team_id`, `type`, `payload`, `occurred_at`)
@@ -70,8 +77,24 @@ Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chí
 - Tất cả bảng bật soft delete (`deleted_at`) khi phù hợp.
 - Sự kiện audit: log trong `activity_log` cho mọi thao tác quan trọng (RBAC, workflow, scheduling).
 - Policy Supabase: hàm `is_team_member(team_id)` dùng trong policy select/insert/update.
+- `workspace_id` là cột bắt buộc với RLS; ngoại lệ (như bảng hệ thống) phải giải thích rõ trong tài liệu.
 
-## Lưu ý mở rộng
-- Custom field: bảng `custom_field_definition` & `custom_field_value` (roadmap).
-- Multi-tenant: `workspace_id` luôn có trong bảng để enforce RLS.
-- Vector index: cột `embedding` kiểu vector (pgvector) cho Drive & nội dung marketing.
+## Mở rộng chi tiết
+### Custom field
+- `custom_field_definition` lưu metadata và cấu hình render/validation cho từng thực thể (`entity_type` = task/project/deal/...); `config_json` chứa các thông số như placeholder, min/max, regex, mapping ID khi field là reference.
+- `custom_field_option` cho các trường select; option thuộc về một workspace để reuse giữa các thực thể.
+- `custom_field_value` lưu giá trị thực, luôn chứa `workspace_id` và `entity_type` để enforce RLS và segment dữ liệu khi join.
+- Index chính: unique partial index `(entity_type, entity_id, field_id)` trên bảng value để ngăn trùng; trigger đồng bộ `updated_at`.
+
+### Multi-tenant & RLS
+- `workspace_id` xuất hiện ở mọi bảng dữ liệu nghiệp vụ (task, project, drive_file, custom_field_value, marketing_content, v.v.) trừ bảng thuần hệ thống (`role_permission`).
+- RLS mặc định: `policy select on <table> using (workspace_id = auth.workspace_id())`. Viết helper function `auth.workspace_id()` để đọc claim JWT.
+- Bảng join (ví dụ `membership`, `task_relation`) dùng `team_id` hoặc `task_id` để truy ngược `workspace_id`; tạo view materialized (nếu cần) để tối ưu filter.
+- Quy tắc migration: schema check `NOT NULL` trên `workspace_id`, thiết lập `default auth.workspace_id()` với row-level security.
+
+### Vector index (pgvector)
+- Sử dụng extension `pgvector`; đảm bảo migration chạy `create extension if not exists vector`.
+- `drive_file.embedding` và `marketing_content.embedding` / `marketing_content_chunk.embedding` dùng kiểu `vector(1536)` (OpenAI text-embedding-3-large). Chuẩn hóa tất cả vector về cùng dimension.
+- Tạo index IVF Flat: `create index drive_file_embedding_ivfflat on drive_file using ivfflat (embedding vector_cosine_ops) with (lists = 100);` (tối ưu sau benchmark).
+- Với nội dung dài, chunk hóa vào `marketing_content_chunk` để tìm kiếm semantically; mỗi chunk chứa metadata (token_count, source) để reconstruct kết quả.
+- Đồng bộ embeddings qua job nền: khi file/campaign cập nhật thì queue worker gọi service ML cập nhật embedding và refresh index.
