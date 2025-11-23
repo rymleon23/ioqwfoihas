@@ -7,6 +7,28 @@ export interface UseTasksOptions {
    assigneeId?: string;
 }
 
+export interface Task {
+   id: string;
+   number: number;
+   title: string;
+   status: string;
+   priority: string;
+   created_at: string;
+   team_id: string;
+   assignee: {
+      display_name: string | null;
+      avatar_url: string | null;
+   } | null;
+   project: {
+      name: string;
+   } | null;
+   workflow_state: {
+      name: string;
+      color: string;
+      type: string;
+   } | null;
+}
+
 export function useTasks({ workspaceId, teamId, assigneeId }: UseTasksOptions = {}) {
    const supabase = createClient();
 
@@ -45,7 +67,7 @@ export function useTasks({ workspaceId, teamId, assigneeId }: UseTasksOptions = 
             throw error;
          }
 
-         return data;
+         return data as unknown as Task[];
       },
    });
 }

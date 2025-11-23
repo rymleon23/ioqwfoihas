@@ -1,6 +1,6 @@
 'use client';
 
-import { useTasks } from '@/hooks/use-tasks';
+import { useTasks, Task } from '@/hooks/use-tasks';
 import {
    Table,
    TableBody,
@@ -54,7 +54,7 @@ export function TaskListView({ workspaceId, teamId }: TaskListViewProps) {
                </TableRow>
             </TableHeader>
             <TableBody>
-               {tasks?.map((task: any) => (
+               {tasks?.map((task: Task) => (
                   <TableRow
                      key={task.id}
                      className="cursor-pointer hover:bg-muted/50"
@@ -85,7 +85,7 @@ export function TaskListView({ workspaceId, teamId }: TaskListViewProps) {
                         {task.assignee ? (
                            <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                 <AvatarImage src={task.assignee.avatar_url} />
+                                 <AvatarImage src={task.assignee.avatar_url || undefined} />
                                  <AvatarFallback>
                                     {task.assignee.display_name?.substring(0, 2).toUpperCase()}
                                  </AvatarFallback>

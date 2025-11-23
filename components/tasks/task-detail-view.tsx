@@ -1,11 +1,11 @@
 'use client';
 
 import { usePermission } from '@/hooks/use-permission';
-import { useTask } from '@/hooks/use-task';
+import { useTask, TaskDetail } from '@/hooks/use-task';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Calendar, User, Tag } from 'lucide-react';
+import { Loader2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskDetailViewProps {
@@ -21,7 +21,7 @@ export function TaskDetailView({ taskId }: TaskDetailViewProps) {
    // Let's check use-task.ts interface. It has project, assignee etc.
    // It selects *, so team_id is in data but maybe not in interface.
    // I will cast it or update interface later. For now let's assume it's accessible.
-   const { can } = usePermission((task as any)?.team_id);
+   const { can } = usePermission((task as TaskDetail)?.team_id);
 
    if (isLoading) {
       return (

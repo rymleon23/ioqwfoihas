@@ -26,6 +26,7 @@ export interface TaskDetail {
       color: string;
       type: string;
    } | null;
+   team_id: string;
 }
 
 const fetchTask = async (taskId: string) => {

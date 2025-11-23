@@ -1,0 +1,15 @@
+
+> circle@0.1.0 lint D:\WORK\06_PROJECTS\Ai\Marketing OS\ioqwfoihas
+> next lint
+
+
+./components/tasks/task-detail-view.tsx
+8:29  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+8:35  Error: 'Tag' is defined but never used.  @typescript-eslint/no-unused-vars
+24:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/tasks/task-list-view.tsx
+57:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+ ELIFECYCLE  Command failed with exit code 1.
