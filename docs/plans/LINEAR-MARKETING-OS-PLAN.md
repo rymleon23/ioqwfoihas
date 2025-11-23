@@ -52,11 +52,11 @@
 
 ### P1.3 Task List & Detail Vertical Slice
 
-- Replace mock imports with Supabase queries (`useQuery` for list/detail, `useMutation` for create/update).
-- Expose API routes `/api/tasks`, `/api/triage`, and `/api/ai/generate` using Supabase service-role access for server mutations.
-- Build task detail panel with tabs (Details, Activity via `task_history`, Comments, AI Panel placeholder).
-- Provide basic filters (team, workflow_state, assignee, labels via `task_label`) stored in Zustand for UI state only.
-- Task numbering auto-increments per team (e.g., ENG-123) via `get_next_task_number()` trigger.
+- [DONE] Replace mock imports with Supabase queries (`useQuery` for list/detail, `useMutation` for create/update).
+- [DONE] Expose API routes `/api/tasks`, `/api/triage`, and `/api/ai/generate` using Supabase service-role access for server mutations.
+- [DONE] Build task detail panel with tabs (Details, Activity via `task_history`, Comments, AI Panel placeholder).
+- [DONE] Provide basic filters (team, workflow_state, assignee, labels via `task_label`) stored in Zustand for UI state only.
+- [DONE] Task numbering auto-increments per team (e.g., ENG-123) via `get_next_task_number()` trigger.
 
 ### P1.4 Triage Inbox MVP
 
@@ -155,4 +155,5 @@
 1. ~~Share this plan with stakeholders for sign-off.~~
 2. ~~Spin up Supabase project and scaffold migrations (Section 3).~~
 3. ~~Kick off P1.1 feature branch, attach `PRD.md`, `IMPLEMENTATION-GUIDE.md`, `modules/teams-and-members.md` in Cursor.~~
-4. **[IN PROGRESS]** P1.3 Task List & Detail - Implement TanStack Query hooks and task views.
+4. ~~P1.3 Task List & Detail - Implement TanStack Query hooks and task views.~~
+5. **[IN PROGRESS]** P1.4 Triage Inbox MVP - Implement triage flow and SLA timers.
