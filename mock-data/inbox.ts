@@ -25,9 +25,9 @@ export interface InboxItem {
    priority: Priority;
    labels: LabelInterface[];
    createdAt: string;
-   cycleId: string;
+   phaseId: string;
    project?: Project;
-   subissues?: string[];
+   subtasks?: string[];
    dueDate?: string;
    // Propriétés spécifiques à l'inbox (conservées)
    content: string;
@@ -49,7 +49,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[0]],
       createdAt: '2024-01-15T10:00:00Z',
-      cycleId: '41',
+      phaseId: '41',
       project: projects[0],
 
       dueDate: '2024-02-15T00:00:00Z',
@@ -70,7 +70,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[1]],
       createdAt: '2024-01-12T14:30:00Z',
-      cycleId: '41',
+      phaseId: '41',
       project: projects[0],
 
       content: 'Section renamed from Animations to UI Transitions',
@@ -89,7 +89,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[0],
       labels: [labels[2]],
       createdAt: '2024-01-10T09:15:00Z',
-      cycleId: '41',
+      phaseId: '41',
       project: projects[1],
 
       content: 'Reopened by GitHub',
@@ -109,7 +109,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[0], labels[2]],
       createdAt: '2024-01-03T16:45:00Z',
-      cycleId: '42',
+      phaseId: '42',
       project: projects[0],
 
       content: 'https://github.com/ln-dev7/circle',
@@ -128,7 +128,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[1]],
       createdAt: '2023-12-28T11:20:00Z',
-      cycleId: '42',
+      phaseId: '42',
       project: projects[1],
 
       content: 'Retested on mobile and it works perfectly now',
@@ -147,7 +147,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[3]],
       createdAt: '2023-12-28T11:25:00Z',
-      cycleId: '42',
+      phaseId: '42',
       project: projects[0],
 
       content: 'Updated performance metrics in the documentation',
@@ -167,7 +167,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[0],
       labels: [labels[0]],
       createdAt: '2023-12-20T08:00:00Z',
-      cycleId: '43',
+      phaseId: '43',
       project: projects[1],
 
       content: 'Closed by Linear',
@@ -186,7 +186,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[2]],
       createdAt: '2023-12-20T08:15:00Z',
-      cycleId: '43',
+      phaseId: '43',
       project: projects[0],
 
       content: 'Closed by Linear',
@@ -205,7 +205,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[1]],
       createdAt: '2023-12-20T08:30:00Z',
-      cycleId: '43',
+      phaseId: '43',
       project: projects[1],
 
       content: 'Closed by Linear',
@@ -218,17 +218,17 @@ export const inboxItems: InboxItem[] = [
       id: '10',
       identifier: 'LNUI-506',
       title: 'Fix Dropdown menu positioning',
-      description: 'Fix dropdown menu positioning issues on mobile devices and small screens',
+      description: 'Fix dropdown menu positioning tasks on mobile devices and small screens',
       status: status[2],
       assignee: users[0],
       priority: priorities[0],
       labels: [labels[0]],
       createdAt: '2023-12-15T13:45:00Z',
-      cycleId: '44',
+      phaseId: '44',
       project: projects[0],
 
       content:
-         'Bug not reproducible on my Firefox mobile. Either it was a temporary issue or a cache problem.',
+         'Bug not reproducible on my Firefox mobile. Either it was a temporary task or a cache problem.',
       type: 'comment',
       user: users[0],
       timestamp: '1mo',
@@ -244,7 +244,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[2]],
       createdAt: '2023-12-10T10:00:00Z',
-      cycleId: '44',
+      phaseId: '44',
       project: projects[1],
 
       content: 'Marked as completed by idriss.ben',
@@ -263,7 +263,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[1]],
       createdAt: '2023-12-10T10:15:00Z',
-      cycleId: '44',
+      phaseId: '44',
       project: projects[0],
 
       content: 'I finished reviewing PR #839 | Review summary: Positive points',
@@ -282,7 +282,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[1]],
       createdAt: '2023-12-10T10:30:00Z',
-      cycleId: '44',
+      phaseId: '44',
       project: projects[1],
 
       content: '🔍 Review completed for PR #808! I did a complete review of your PR',
@@ -302,7 +302,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[1]],
       createdAt: '2023-12-05T15:20:00Z',
-      cycleId: '45',
+      phaseId: '45',
       project: projects[0],
 
       content: 'Reopened by GitHub',
@@ -315,17 +315,17 @@ export const inboxItems: InboxItem[] = [
       id: '15',
       identifier: 'LNUI-511',
       title: 'Fix audio file upload from mobile devices',
-      description: 'Fix issues with audio file upload functionality on mobile devices',
+      description: 'Fix tasks with audio file upload functionality on mobile devices',
       status: status[1],
       assignee: users[4],
       priority: priorities[0],
       labels: [labels[0]],
       createdAt: '2023-12-05T15:35:00Z',
-      cycleId: '45',
+      phaseId: '45',
       project: projects[1],
 
       content:
-         "@in now that it's in production, I've tested it and don't have the issue anymore; we can close this ticket",
+         "@in now that it's in production, I've tested it and don't have the task anymore; we can close this ticket",
       type: 'mention',
       user: users[4],
       timestamp: '6w',
@@ -341,10 +341,10 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[1],
       labels: [labels[2]],
       createdAt: '2023-11-28T12:00:00Z',
-      cycleId: '45',
+      phaseId: '45',
       project: projects[0],
 
-      content: 'leo.samu assigned the issue to you',
+      content: 'leo.samu assigned the task to you',
       type: 'assignment',
       user: users[6],
       timestamp: '7w',
@@ -360,7 +360,7 @@ export const inboxItems: InboxItem[] = [
       priority: priorities[2],
       labels: [labels[1]],
       createdAt: '2023-11-28T12:15:00Z',
-      cycleId: '45',
+      phaseId: '45',
       project: projects[1],
 
       content: 'Marked as completed by samuel.baudry',

@@ -23,7 +23,7 @@ export const inboxItems = [
       icon: Inbox,
    },
    {
-      name: 'My issues',
+      name: 'My tasks',
       url: '#',
       icon: FolderKanban,
    },
@@ -92,8 +92,8 @@ export const featuresItems = [
       icon: Box,
    },
    {
-      name: 'Initiatives',
-      url: '/settings/initiatives',
+      name: 'Strategic',
+      url: '/settings/strategic',
       icon: Layers,
    },
    {

@@ -1,11 +1,11 @@
-import AllIssues from '@/components/common/issues/all-issues';
-import Header from '@/components/layout/headers/issues/header';
+import AllTasks from '@/components/common/tasks/all-tasks';
+import Header from '@/components/layout/headers/tasks/header';
 import MainLayout from '@/components/layout/main-layout';
 
-export default function AllIssuesPage() {
+export default function AllTasksPage() {
    return (
       <MainLayout header={<Header />}>
-         <AllIssues />
+         <AllTasks />
       </MainLayout>
    );
 }

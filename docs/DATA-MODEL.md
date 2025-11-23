@@ -1,100 +1,221 @@
-# Mô hình dữ liệu
+# Mô hình dữ liệu (Refined for Linear-like Architecture)
 
-Schema thiết kế cho PostgreSQL/Supabase, sử dụng UUID v4 làm khóa chính, timestamp ISO-8601 (UTC) và tuân thủ naming snake_case (DB) / camelCase (code). RLS bật cho mọi bảng liên quan workspace/team.
+Schema thiết kế cho PostgreSQL/Supabase, tối ưu cho hiệu suất (Read-heavy) và trải nghiệm UX mượt mà (Linear-style).
 
-## Thực thể chính
-### Workspace
-- `id` UUID
-- `name`
-- `slug`
+## 1. Core Organization & Users
+
+### Workspace (Organization)
+
+Tương đương bảng `organizations` của Linear.
+
+- `id` UUID (PK)
+- `name` VARCHAR
+- `slug` VARCHAR (Unique, dùng cho subdomain/url)
+- `created_at` TIMESTAMP
+
+### User (Global Profile)
+
+Thay thế bảng `member` cũ. Lưu thông tin user ở cấp độ Workspace.
+
+- `id` UUID (PK)
+- `workspace_id` UUID (FK)
+- `email` VARCHAR
+- `display_name` VARCHAR
+- `avatar_url` VARCHAR
+- `role` VARCHAR (Global role: 'admin', 'member', 'guest' - giống Linear)
+- `status` VARCHAR ('active', 'invited', 'disabled')
+- `created_at` TIMESTAMP
+
+### TeamMember (Junction)
+
+_Giữ lại bảng này để đảm bảo yêu cầu "1 người thuộc nhiều team với role khác nhau"._
+
+- `id` UUID (PK)
+- `user_id` UUID (FK)
+- `team_id` UUID (FK)
+- `role` VARCHAR ('owner', 'admin', 'member', 'guest') - Role trong phạm vi Team.
+- `preferences` JSONB (Lưu setting riêng của user cho team này)
+
+## 2. Structure & Workflow
 
 ### Team
-- `id` UUID
-- `workspace_id` FK → workspace
-- `name`
-- `key` (AIM2)
-- `workflow_id` FK → workflow
-- `default_phase_id` FK → phase
 
-### Member & Membership
-- `member` (`id`, `workspace_id`, `email`, `display_name`, `avatar_url`, `status` active/invited/disabled)
-- `membership` (`id`, `member_id`, `team_id`, `role` owner/admin/member/guest)
-- `role_permission` (`role`, `resource`, `action` create/read/update/delete/manage)
+- `id` UUID (PK)
+- `workspace_id` UUID (FK)
+- `name` VARCHAR
+- `key` VARCHAR (Prefix cho issue, VD: "ENG", "MKT")
+- `description` TEXT
+- `icon` VARCHAR
+- `color` VARCHAR
 
-### Workflow & State
-- `workflow` (`id`, `team_id`, `states` array {name, category unstarted|started|completed|cancelled, order})
+### WorkflowState (Trạng thái)
 
-### Strategic / Project / Phase
-- `strategic` (`id`, `workspace_id`, `name`, `description`, `status`, `owner_id`)
-- `project` (`id`, `team_id`, `strategic_id`, `name`, `description`, `milestones[]`, `health`)
-- `phase` (`id`, `team_id`, `name`, `start_date`, `end_date`, `sequence_index`, `status`, `rollover_strategy`)
+Thay thế bảng `workflow` cũ. Mỗi Team tự định nghĩa các cột trạng thái riêng.
 
-### Task & liên kết
-- `task` (`id`, `team_id`, `project_id`, `strategic_id`, `phase_id`, `title`, `description`, `state_id`, `assignee_id`, `estimate`, `priority`, `due_date`, timestamps, `parent_id`, `labels[]`)
-- `task_relation` (`id`, `task_id`, `related_task_id`, `type` subtask/duplicate/blocks/blocked_by/relates_to)
-- `triage_event` (`id`, `task_id`, `team_id`, `action`, `performed_by`, `note`, `created_at`)
-- `task_comment` (`id`, `task_id`, `author_id`, `body`, `attachments`, `created_at`)
+- `id` UUID (PK)
+- `team_id` UUID (FK)
+- `name` VARCHAR (VD: "In Progress", "Code Review")
+- `color` VARCHAR
+- `type` VARCHAR ('backlog', 'unstarted', 'started', 'completed', 'canceled') - Nhóm trạng thái chuẩn của Linear.
+- `position` FLOAT (Dùng để sắp xếp thứ tự cột)
 
-### Templates & Saved Views
-- `template` (`id`, `team_id`, `type` task/project, `payload`, `is_default`)
-- `label` (`id`, `team_id`, `name`, `color`, `is_required`)
-- `saved_view` (`id`, `owner_id`, `scope` private/team/workspace, `filters`, `layout`, `name`)
+## 3. Work Items (The Core)
 
-### Notifications & Activity
-- `notification` (`id`, `member_id`, `type`, `payload`, `read_at`)
-- `activity_log` (`id`, `workspace_id`, `entity_type`, `entity_id`, `action`, `metadata`, `created_at`)
+### Project
+
+- `id` UUID (PK)
+- `workspace_id` UUID (FK)
+- `team_ids` UUID[] (Array - Project có thể thuộc nhiều Team)
+- `strategic_id` UUID (FK)
+- `name` VARCHAR
+- `description` TEXT
+- `state` VARCHAR ('planned', 'started', 'paused', 'completed', 'canceled')
+- `health` VARCHAR ('on_track', 'at_risk', 'off_track')
+- `lead_id` UUID (FK -> User)
+- `start_date` DATE
+- `target_date` DATE
+- `milestones` JSONB
+
+### Phase (Cycles)
+
+- `id` UUID (PK)
+- `team_id` UUID (FK)
+- `name` VARCHAR (VD: "Cycle 24")
+- `sequence_index` INTEGER
+- `start_date` TIMESTAMP
+- `end_date` TIMESTAMP
+- `status` VARCHAR ('active', 'completed')
+
+### Task (Issue)
+
+- `id` UUID (PK)
+- `workspace_id` UUID (FK)
+- `team_id` UUID (FK)
+- `number` INTEGER (Friendly ID, tự tăng theo Team. VD: 123 cho ENG-123)
+- `title` VARCHAR
+- `description` TEXT (Markdown)
+- `priority` INTEGER (0: No, 1: Urgent, 2: High, 3: Medium, 4: Low)
+- `state_id` UUID (FK -> WorkflowState)
+- `assignee_id` UUID (FK -> User)
+- `parent_id` UUID (FK -> Task)
+- `project_id` UUID (FK)
+- `phase_id` UUID (FK)
+- `rank` VARCHAR (LexoRank - dùng để sắp xếp trong List/Board)
+- `due_date` TIMESTAMP
+- `created_by` UUID (FK -> User)
+- `created_at` TIMESTAMP
+- `updated_at` TIMESTAMP
+- `deleted_at` TIMESTAMP (Soft delete)
+
+### TaskRelation
+
+- `id` UUID (PK)
+- `task_id` UUID (FK)
+- `related_task_id` UUID (FK)
+- `type` VARCHAR ('subtask', 'duplicate', 'blocks', 'blocked_by', 'relates_to')
+
+## 4. Meta & Interactions
+
+### Label
+
+- `id` UUID (PK)
+- `team_id` UUID (FK - Nullable nếu là Global Label)
+- `name` VARCHAR
+- `color` VARCHAR
+
+### TaskLabel (Junction)
+
+Thay thế mảng `labels[]` để chuẩn hóa quan hệ nhiều-nhiều.
+
+- `task_id` UUID (FK)
+- `label_id` UUID (FK)
+
+### TaskHistory (Audit Log)
+
+Lưu vết thay đổi chi tiết (Change Data Capture).
+
+- `id` UUID (PK)
+- `task_id` UUID (FK)
+- `actor_id` UUID (FK -> User)
+- `field_changed` VARCHAR (VD: "status", "assignee", "priority")
+- `from_value` TEXT
+- `to_value` TEXT
+- `created_at` TIMESTAMP
+
+### Comment
+
+- `id` UUID (PK)
+- `task_id` UUID (FK)
+- `user_id` UUID (FK)
+- `body` TEXT
+- `created_at` TIMESTAMP
+
+## 5. Extended Features (Marketing OS Specific)
+
+_Các bảng này giữ nguyên logic nghiệp vụ đặc thù của Marketing OS nhưng chuẩn hóa theo naming convention mới._
 
 ### AI & Content
-- `ai_generation` (`id`, `task_id`, `agent`, `prompt`, `sources`, `output_markdown`, `model`, `latency_ms`, `created_by`, `created_at`)
-- `ai_agent_profile` (`id`, `workspace_id`, `name`, `description`, `prompt`, `default_sources`)
-- `marketing_content` (`id`, `workspace_id`, `source_type` ai/manual/import, `source_id`, `title`, `summary`, `body`, `embedding vector(1536)`, `metadata`, `created_at`, `updated_at`)
-- `marketing_content_chunk` (`id`, `content_id`, `sequence_index`, `text`, `embedding vector(1536)`, `token_count`)
+
+- `ai_agent_profile`: Giữ nguyên.
+- `marketing_content`: Giữ nguyên.
+- `marketing_content_chunk`: Giữ nguyên.
+
+### Drive & Assets
+
+- `drive_folder`: Giữ nguyên.
+- `drive_file`: Giữ nguyên.
+- `task_attachment`: Link task với `drive_file` hoặc External URL.
 
 ### Social Scheduling
-- `social_account` (`id`, `team_id`, `platform`, `display_name`, `secret_ref`)
-- `scheduled_post` (`id`, `task_id`, `account_id`, `caption`, `media`, `scheduled_at`, `status` queued/posting/done/error)
-- `post_result` (`id`, `scheduled_id`, `provider_post_id`, `status`, `error`, `created_at`)
 
-### Drive Hub & RAG
-- `drive_folder` (`id`, `workspace_id`, `external_id`, `name`, `parent_id`, `path`)
-- `drive_file` (`id`, `folder_id`, `workspace_id`, `external_id`, `name`, `mime_type`, `size`, `version`, `synced_at`, `embedding vector(1536)`, `metadata`)
-- `task_attachment` (`id`, `task_id`, `type` drive/upload/link, `drive_file_id`, `url`, `metadata`)
+- `social_account`: Giữ nguyên.
+- `scheduled_post`: Link với `task_id`.
 
-### Custom Field (roadmap)
-- `custom_field_definition` (`id`, `workspace_id`, `entity_type`, `key`, `label`, `description`, `field_type` text/number/date/single_select/multi_select/boolean/reference, `config_json`, `is_required`, `is_archived`, `created_by`, `created_at`)
-- `custom_field_option` (`id`, `field_id`, `value`, `label`, `color`, `order_index`, `is_archived`)
-- `custom_field_value` (`id`, `workspace_id`, `entity_type`, `entity_id`, `field_id`, `value_text`, `value_number`, `value_boolean`, `value_date`, `value_json`, `created_at`, `updated_at`)
+## Ghi chú kỹ thuật
 
-### Analytics
-- `analytics_event` (`id`, `workspace_id`, `team_id`, `type`, `payload`, `occurred_at`)
-- `metric_snapshot` (`id`, `scope`, `scope_id`, `metric`, `value`, `captured_at`)
+1. **Friendly ID**: Cần cài đặt Trigger DB để tự động tăng `number` khi insert Task mới vào Team.
+2. **LexoRank**: Sử dụng thư viện hoặc thuật toán để sinh chuỗi `rank` khi kéo thả, tránh phải update lại toàn bộ danh sách.
+3. **Performance**: Đánh Index kỹ lưỡng cho các cột FK (`team_id`, `assignee_id`, `state_id`, `project_id`).
 
-### CRM (vNext)
-- `customer` (`id`, `workspace_id`, `name`, `contact_info`, `status`)
-- `deal` (`id`, `workspace_id`, `customer_id`, `project_id`, `stage`, `value`, `close_date`)
+## Sơ đồ quan hệ (ER Diagram)
 
-## Chuẩn hóa & dữ liệu hệ thống
-- Tất cả bảng bật soft delete (`deleted_at`) khi phù hợp.
-- Sự kiện audit: log trong `activity_log` cho mọi thao tác quan trọng (RBAC, workflow, scheduling).
-- Policy Supabase: hàm `is_team_member(team_id)` dùng trong policy select/insert/update.
-- `workspace_id` là cột bắt buộc với RLS; ngoại lệ (như bảng hệ thống) phải giải thích rõ trong tài liệu.
+```mermaid
+erDiagram
+    Workspace ||--|{ User : has
+    Workspace ||--|{ Team : has
+    Workspace ||--|{ Project : has
 
-## Mở rộng chi tiết
-### Custom field
-- `custom_field_definition` lưu metadata và cấu hình render/validation cho từng thực thể (`entity_type` = task/project/deal/...); `config_json` chứa các thông số như placeholder, min/max, regex, mapping ID khi field là reference.
-- `custom_field_option` cho các trường select; option thuộc về một workspace để reuse giữa các thực thể.
-- `custom_field_value` lưu giá trị thực, luôn chứa `workspace_id` và `entity_type` để enforce RLS và segment dữ liệu khi join.
-- Index chính: unique partial index `(entity_type, entity_id, field_id)` trên bảng value để ngăn trùng; trigger đồng bộ `updated_at`.
+    User ||--|{ TeamMember : membership
+    Team ||--|{ TeamMember : members
 
-### Multi-tenant & RLS
-- `workspace_id` xuất hiện ở mọi bảng dữ liệu nghiệp vụ (task, project, drive_file, custom_field_value, marketing_content, v.v.) trừ bảng thuần hệ thống (`role_permission`).
-- RLS mặc định: `policy select on <table> using (workspace_id = auth.workspace_id())`. Viết helper function `auth.workspace_id()` để đọc claim JWT.
-- Bảng join (ví dụ `membership`, `task_relation`) dùng `team_id` hoặc `task_id` để truy ngược `workspace_id`; tạo view materialized (nếu cần) để tối ưu filter.
-- Quy tắc migration: schema check `NOT NULL` trên `workspace_id`, thiết lập `default auth.workspace_id()` với row-level security.
+    Team ||--|{ WorkflowState : defines
+    Team ||--|{ Phase : runs
+    Team ||--|{ Task : contains
 
-### Vector index (pgvector)
-- Sử dụng extension `pgvector`; đảm bảo migration chạy `create extension if not exists vector`.
-- `drive_file.embedding` và `marketing_content.embedding` / `marketing_content_chunk.embedding` dùng kiểu `vector(1536)` (OpenAI text-embedding-3-large). Chuẩn hóa tất cả vector về cùng dimension.
-- Tạo index IVF Flat: `create index drive_file_embedding_ivfflat on drive_file using ivfflat (embedding vector_cosine_ops) with (lists = 100);` (tối ưu sau benchmark).
-- Với nội dung dài, chunk hóa vào `marketing_content_chunk` để tìm kiếm semantically; mỗi chunk chứa metadata (token_count, source) để reconstruct kết quả.
-- Đồng bộ embeddings qua job nền: khi file/campaign cập nhật thì queue worker gọi service ML cập nhật embedding và refresh index.
+    Project }|--|{ Team : involves
+    Project ||--|{ Task : groups
+
+    Phase ||--|{ Task : timeboxes
+
+    WorkflowState ||--|{ Task : status
+
+    Task ||--|{ TaskRelation : parent
+    Task ||--|{ TaskRelation : child
+    Task ||--|{ TaskLabel : labeled
+    Label ||--|{ TaskLabel : labels
+
+    Task ||--|{ Comment : has
+    Task ||--|{ TaskHistory : logs
+    Task ||--|{ TaskAttachment : files
+
+    User ||--|{ Task : assigned_to
+    User ||--|{ Comment : writes
+    User ||--|{ TaskHistory : performs
+
+    %% Extended Modules
+    Task ||--|{ ScheduledPost : schedules
+    Workspace ||--|{ DriveFolder : stores
+    DriveFolder ||--|{ DriveFile : contains
+```
+
+hh

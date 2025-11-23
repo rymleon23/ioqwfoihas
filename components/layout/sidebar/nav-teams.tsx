@@ -103,7 +103,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href="/lndev-ui/team/CORE/all">
                                     <CopyMinus size={14} />
-                                    <span>Issues</span>
+                                    <span>Tasks</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>
@@ -111,7 +111,7 @@ export function NavTeams() {
                               <SidebarMenuSubButton asChild>
                                  <Link href="/lndev-ui/team/CORE/all">
                                     <RiDonutChartFill size={14} />
-                                    <span>Cycles</span>
+                                    <span>Phases</span>
                                  </Link>
                               </SidebarMenuSubButton>
                            </SidebarMenuSubItem>

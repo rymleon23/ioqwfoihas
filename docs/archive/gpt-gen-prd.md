@@ -10,12 +10,12 @@ Chuẩn hóa thuật ngữ
 
 Để phù hợp với ngữ cảnh marketing, chúng ta đổi tên các khái niệm cốt lõi của Linear như sau. Bản đồ này phải áp dụng cho UI, copy, document và code.
 
-Linear	Aim (dùng trong UI/Docs/Code)
-Initiative	Strategic
-Issue	Task
-Project	Project
-Cycle	Phase
-Triage	Triage
+Linear Aim (dùng trong UI/Docs/Code)
+Initiative Strategic
+Task Task
+Project Project
+Phase Phase
+Triage Triage
 Phạm vi
 
 Sản phẩm bao gồm hai lớp tính năng chính:
@@ -37,6 +37,7 @@ Kỹ sư (Engineer) – xây dựng API, engine workflow và queue, tích hợp 
 Analyst – phân tích dữ liệu marketing và productivity, xây dựng dashboard và chia sẻ kết quả với toàn team.
 
 Yêu cầu chức năng tổng quan
+
 1. Workspace, Teams & Members (RBAC)
 
 Cho phép tạo và quản lý Workspace, Team và Member với các role: Owner, Admin, Member, Guest. Mỗi Team có key duy nhất (ví dụ AIM2) và cấu hình workflow riêng.
@@ -47,7 +48,7 @@ Quản lý quyền hạn: thành viên chỉ truy cập dữ liệu thuộc Team
 
 Hộp thư đến nhận yêu cầu mới từ nhiều nguồn (quick add, email/API, integration). Người phụ trách có thể Accept/Decline, Merge (duplicate), Assign, Snooze và gắn Priority.
 
-Hỗ trợ rule tự động gắn label/assignee khi nhận issue mới. Theo dõi thời gian xử lý triage và các tỷ lệ chấp nhận/không chấp nhận.
+Hỗ trợ rule tự động gắn label/assignee khi nhận task mới. Theo dõi thời gian xử lý triage và các tỷ lệ chấp nhận/không chấp nhận.
 
 3. Tasks & Relations
 
@@ -55,7 +56,7 @@ Mỗi Task có các thuộc tính: tiêu đề (bắt buộc), trạng thái (th
 
 Hỗ trợ quan hệ: subtask, duplicate, blocks / blocked‑by, relates‑to. Có thể chặn chuyển trạng thái khi Task đang bị block.
 
-4. Phases (Cycles)
+4. Phases (Phases)
 
 Chu kỳ lặp lại với độ dài cố định (1–4 tuần) tùy Team. Khi phase kết thúc, tự động carry‑over Task chưa hoàn thành sang Phase tiếp theo.
 
@@ -147,7 +148,7 @@ Roadmap tổng quan
 
 P1 – Linear Shell (~2–3 tuần): triển khai RBAC v1, Triage v1, Views/Filters v1, Workflow & Relations cơ bản, Command Palette sơ khai.
 
-P2 – Phases & Projects (~2–4 tuần): thêm Phases (cycles), burndown/velocity, Projects/Milestones/Strategic, Notifications/Activity, Templates/Labels và hook Drive.
+P2 – Phases & Projects (~2–4 tuần): thêm Phases (phases), burndown/velocity, Projects/Milestones/Strategic, Notifications/Activity, Templates/Labels và hook Drive.
 
 P3 – Marketing layer (~3–5 tuần): triển khai AI Studio v1, Social Scheduler v1, và Analysis v0 (velocity, triage, throughput).
 
@@ -191,17 +192,17 @@ Backend
 
 Hệ thống backend được chia thành các dịch vụ riêng biệt (microservices hoặc modules trong monorepo) giao tiếp qua REST/GraphQL và hàng đợi message (RabbitMQ/Kafka) cho các tác vụ bất đồng bộ.
 
-Service	Chức năng chính
-API Gateway	Điểm vào duy nhất; xử lý auth, rate limit, route tới các service nội bộ.
-Core Service	CRUD Workspace/Team/Member/Task/Project/Phase; workflow engine.
-Triage Service	Nhận issue mới, áp dụng rules, ghi log triage, trả về thống kê.
-AI Service	Kết nối với GPT/Gemini, triển khai Agents, thực hiện RAG, trả kết quả.
-Social Service	Quản lý OAuth, lên lịch, queue auto‑post, nhận webhook từ FB/IG/Zalo.
-Drive Indexer	Kết nối Google Drive, index metadata và embeddings, trả kết quả cho RAG.
-Analysis Service	Tính toán KPI, lưu cache dashboards, cung cấp API cho frontend.
-Notification Service	Phát sự kiện đến in‑app/email/Slack, tập hợp digest.
-Auth Service	Quản lý người dùng, token, RBAC, SSO; hỗ trợ OAuth2 cho các integration.
-CRM Service (vNext)	Quản lý Customer/Deal và pipeline.
+Service Chức năng chính
+API Gateway Điểm vào duy nhất; xử lý auth, rate limit, route tới các service nội bộ.
+Core Service CRUD Workspace/Team/Member/Task/Project/Phase; workflow engine.
+Triage Service Nhận task mới, áp dụng rules, ghi log triage, trả về thống kê.
+AI Service Kết nối với GPT/Gemini, triển khai Agents, thực hiện RAG, trả kết quả.
+Social Service Quản lý OAuth, lên lịch, queue auto‑post, nhận webhook từ FB/IG/Zalo.
+Drive Indexer Kết nối Google Drive, index metadata và embeddings, trả kết quả cho RAG.
+Analysis Service Tính toán KPI, lưu cache dashboards, cung cấp API cho frontend.
+Notification Service Phát sự kiện đến in‑app/email/Slack, tập hợp digest.
+Auth Service Quản lý người dùng, token, RBAC, SSO; hỗ trợ OAuth2 cho các integration.
+CRM Service (vNext) Quản lý Customer/Deal và pipeline.
 Data Storage
 
 Database chính: PostgreSQL với schema mô đun; lưu thông tin công việc, người dùng, vai trò, workflow, lịch sử và token OAuth (mã hoá).
@@ -316,7 +317,7 @@ teamId – FK tới Team.
 
 states – array các trạng thái (bên trong gồm name, category unstarted|started|completed|cancelled, order).
 
-Phase (Cycle)
+Phase (Phase)
 
 id – UUID.
 
@@ -358,7 +359,7 @@ milestones – list; mỗi milestone gồm name, startDate, dueDate, progress (%
 
 health – on‑track / at‑risk / off‑track.
 
-Task (Issue)
+Task (Task)
 
 id – UUID.
 
@@ -621,28 +622,28 @@ Tối ưu performance, test hệ thống.
 
 P4 – Mở rộng (kế tiếp)
 
-Cải thiện dashboard marketing (reach/CTR/conv/cadence) và productivity (cycle time, issue age).
+Cải thiện dashboard marketing (reach/CTR/conv/cadence) và productivity (phase time, task age).
 
 Thêm CRM nhẹ: thực thể Customer & Deal, pipeline bán hàng đơn giản.
 
 Hỗ trợ custom fields, export/import, public API; nâng cấp i18n và a11y.
 
 Nguồn lực
-Vai trò	Người tham gia	Nhiệm vụ chính
-Product Manager	[Tên PM]	Điều phối roadmap, viết specs, xác định KPI.
-Tech Lead	[Tên TL]	Thiết kế kiến trúc, review code, định hướng kỹ thuật.
-FE Engineers	[Danh sách]	Xây dựng UI shell, Task page, AI Panel, Scheduler.
-BE Engineers	[Danh sách]	Thiết kế API, mô hình dữ liệu, tích hợp OAuth & Drive.
-Designer	[Tên designer]	Thiết kế UI/UX, chuẩn hoá styleguide.
-QA/Tester	[Tên]	Viết test, đảm bảo UI & logic hoạt động đúng.
-Data Analyst	[Tên]	Xây dựng dashboard, tính toán KPI, hỗ trợ planning.
+Vai trò Người tham gia Nhiệm vụ chính
+Product Manager [Tên PM] Điều phối roadmap, viết specs, xác định KPI.
+Tech Lead [Tên TL] Thiết kế kiến trúc, review code, định hướng kỹ thuật.
+FE Engineers [Danh sách] Xây dựng UI shell, Task page, AI Panel, Scheduler.
+BE Engineers [Danh sách] Thiết kế API, mô hình dữ liệu, tích hợp OAuth & Drive.
+Designer [Tên designer] Thiết kế UI/UX, chuẩn hoá styleguide.
+QA/Tester [Tên] Viết test, đảm bảo UI & logic hoạt động đúng.
+Data Analyst [Tên] Xây dựng dashboard, tính toán KPI, hỗ trợ planning.
 Quy trình & giao tiếp
 
 Scrum/Kanban với sprint 1–2 tuần; daily stand‑up; weekly demo.
 
 PRD và specs lưu ở thư mục docs/; mô‑đun phân tách rõ trong docs/MODULES/.
 
-Mỗi issue có acceptance criteria rõ ràng; test viết đồng thời với code.
+Mỗi task có acceptance criteria rõ ràng; test viết đồng thời với code.
 
 Sử dụng Linear (hoặc tool tương tự) để theo dõi backlog và velocity. Mỗi Epic tương ứng với P1, P2, P3, P4.
 
@@ -663,7 +664,7 @@ Bối cảnh kinh doanh
 
 Công ty/Agency marketing (AiM) cần một công cụ tổng hợp để lập kế hoạch, điều phối công việc và đánh giá hiệu quả chiến dịch. Các giải pháp hiện tại (Spreadsheet, Slack, email) phân tán và thiếu tính tự động.
 
-Các đội ngũ khác nhau (content, design, social media, finance) phải hợp tác chặt chẽ, nhưng ngôn ngữ và quy trình không đồng nhất. Việc đổi tên khái niệm (Initiative → Strategic, Issue → Task, Cycle → Phase) nhằm tạo sự quen thuộc và gần gũi với nghiệp vụ marketing.
+Các đội ngũ khác nhau (content, design, social media, finance) phải hợp tác chặt chẽ, nhưng ngôn ngữ và quy trình không đồng nhất. Việc đổi tên khái niệm (Initiative → Strategic, Task → Task, Phase → Phase) nhằm tạo sự quen thuộc và gần gũi với nghiệp vụ marketing.
 
 Tính năng AI đang trở thành bắt buộc trong sản xuất nội dung. Phần mềm cần tích hợp AI để tạo nháp, tối ưu caption, dự đoán lịch đăng hiệu quả.
 
@@ -724,14 +725,14 @@ Member muốn xem những Teams mình tham gia và quyền của mình.
 Guest cần tham gia Project với quyền đọc/comment mà không truy cập các Project khác.
 
 API surface (giả định REST)
-Method & Endpoint	Mô tả	Yêu cầu quyền
-POST /teams	Tạo Team mới (name, key, workflowId)	Owner/Admin
-PATCH /teams/{id}	Cập nhật tên/team key, workflow	Owner/Admin
-GET /teams/{id}	Lấy thông tin chi tiết Team & member list	Member
-DELETE /teams/{id}	Xoá Team và toàn bộ dữ liệu liên quan (cẩn trọng)	Owner
-POST /teams/{id}/invite	Mời người dùng (email, role)	Owner/Admin
-PATCH /memberships/{id}	Đổi role hoặc disable member	Owner/Admin
-GET /workspaces/{id}/members	Danh sách tất cả thành viên trong workspace	Owner/Admin
+Method & Endpoint Mô tả Yêu cầu quyền
+POST /teams Tạo Team mới (name, key, workflowId) Owner/Admin
+PATCH /teams/{id} Cập nhật tên/team key, workflow Owner/Admin
+GET /teams/{id} Lấy thông tin chi tiết Team & member list Member
+DELETE /teams/{id} Xoá Team và toàn bộ dữ liệu liên quan (cẩn trọng) Owner
+POST /teams/{id}/invite Mời người dùng (email, role) Owner/Admin
+PATCH /memberships/{id} Đổi role hoặc disable member Owner/Admin
+GET /workspaces/{id}/members Danh sách tất cả thành viên trong workspace Owner/Admin
 Quy tắc & xử lý đặc biệt
 
 Team key chỉ gồm chữ hoa và số, dài tối đa 4 ký tự, không trùng trong workspace.
@@ -740,11 +741,11 @@ Khi xóa một Team, cần xác nhận hai lần vì mọi Task và Project thu�
 
 Role matrix cơ bản:
 
-Role	Team Settings	Quản lý thành viên	Tạo/Chỉnh sửa Task/Project	Xem báo cáo
-Owner	✓	✓	✓	✓
-Admin	✓	✓	✓	✓
-Member	✗	✗	✓	✓
-Guest	✗	✗	✗ (chỉ comment)	✓ (giới hạn)
+Role Team Settings Quản lý thành viên Tạo/Chỉnh sửa Task/Project Xem báo cáo
+Owner ✓ ✓ ✓ ✓
+Admin ✓ ✓ ✓ ✓
+Member ✗ ✗ ✓ ✓
+Guest ✗ ✗ ✗ (chỉ comment) ✓ (giới hạn)
 UI / UX
 
 Danh sách Teams: tại sidebar/workspace settings, hiển thị các Team user tham gia; có nút tạo Team mới (bật modal/drawer).
@@ -795,14 +796,14 @@ Hành động
 
 Trong Inbox, mỗi item (Task) có thể:
 
-Action	Kết quả
-Accept	Thêm Task vào backlog của Team, gán trạng thái bắt đầu (hoặc Triage → To Do).
-Decline	Đánh dấu là không thực hiện; lưu lý do vào comment/log; có thể gửi phản hồi tới nguồn vào.
-Merge	Gộp với Task khác; giữ lại một Task chính và chuyển comment/attachment.
-Assign	Chọn người chịu trách nhiệm (assignee) và Team, set trạng thái mặc định.
-Snooze	Ẩn Task khỏi Inbox trong một khoảng thời gian nhất định (1 ngày, 1 tuần, custom).
-Set priority	Gán mức độ ưu tiên (0–4).
-Label	Gắn các label liên quan (bug/feature/marketing, medium/high…).
+Action Kết quả
+Accept Thêm Task vào backlog của Team, gán trạng thái bắt đầu (hoặc Triage → To Do).
+Decline Đánh dấu là không thực hiện; lưu lý do vào comment/log; có thể gửi phản hồi tới nguồn vào.
+Merge Gộp với Task khác; giữ lại một Task chính và chuyển comment/attachment.
+Assign Chọn người chịu trách nhiệm (assignee) và Team, set trạng thái mặc định.
+Snooze Ẩn Task khỏi Inbox trong một khoảng thời gian nhất định (1 ngày, 1 tuần, custom).
+Set priority Gán mức độ ưu tiên (0–4).
+Label Gắn các label liên quan (bug/feature/marketing, medium/high…).
 Rules & Automation
 
 Auto‑assignment: cấu hình rule gán Task dựa trên label/keyword (ví dụ: “bug” → assign QA; “SEO” → assign Content).
@@ -883,13 +884,13 @@ Mặc định
 
 Template (có thể chỉnh sửa):
 
-Tên	Category
-Backlog	unstarted
-Selected	unstarted
-In Progress	started
-Review	started
-Done	completed
-Canceled	canceled
+Tên Category
+Backlog unstarted
+Selected unstarted
+In Progress started
+Review started
+Done completed
+Canceled canceled
 
 Team mới được tạo sẽ copy workflow này và có thể chỉnh sửa.
 
@@ -949,7 +950,7 @@ Nếu bật tuỳ chọn “Blockers prevent completion”, Task bị block khô
 
 Metrics & Reporting
 
-Cycle/Phase time: thời gian Task ở mỗi category; trung bình lead time và cycle time.
+Phase/Phase time: thời gian Task ở mỗi category; trung bình lead time và phase time.
 
 Velocity: số điểm (estimate) hoàn thành mỗi Phase; số Task hoàn thành.
 
@@ -957,11 +958,11 @@ Status distribution: phân bổ Task ở mỗi trạng thái; highlight bottlene
 
 Priority breakdown: số Task theo từng mức priority.
 
-Phases/Cycles:
-Module: Phases (Cycles)
+Phases/Phases:
+Module: Phases (Phases)
 Mục đích
 
-Phases (tương tự cycle hoặc sprint) giúp nhóm chia nhỏ công việc thành các chu kỳ lặp lại, thường từ 1–4 tuần. Việc sử dụng Phases cho phép nhóm đo lường velocity, lập kế hoạch ngắn hạn và cải thiện dự báo.
+Phases (tương tự phase hoặc sprint) giúp nhóm chia nhỏ công việc thành các chu kỳ lặp lại, thường từ 1–4 tuần. Việc sử dụng Phases cho phép nhóm đo lường velocity, lập kế hoạch ngắn hạn và cải thiện dự báo.
 
 Cấu trúc dữ liệu
 
@@ -1163,10 +1164,10 @@ Review & Edit: người dùng nhận bản nháp trong editor; có thể chỉnh
 Submit: sau khi hài lòng, người dùng nhấn Submit; nội dung được chèn vào comment của Task hoặc được lưu dưới dạng file đính kèm. Citation nguồn được thêm vào cuối nội dung. Thao tác được log.
 
 API & Endpoint (giả định)
-Endpoint	Mô tả
-POST /ai/generate	Body: {taskId, agent, sources, promptOverride?}. Trả về draft.
-POST /ai/submit	Body: {taskId, draftId, content}. Lưu nội dung vào Task.
-GET /ai/history	Query: taskId. Trả về danh sách draft đã tạo, timestamp, agent.
+Endpoint Mô tả
+POST /ai/generate Body: {taskId, agent, sources, promptOverride?}. Trả về draft.
+POST /ai/submit Body: {taskId, draftId, content}. Lưu nội dung vào Task.
+GET /ai/history Query: taskId. Trả về danh sách draft đã tạo, timestamp, agent.
 RAG sources syntax
 
 workspace:// – toàn bộ data workspace (notes, docs).
@@ -1316,12 +1317,12 @@ Drive Hub giúp tổ chức, lưu trữ và truy xuất tài liệu (docs, templ
 
 Cấu trúc thư mục gợi ý
 /Company/AiM
-  ├─ Business/       (tài liệu về công ty, quy trình nội bộ)
-  ├─ Product/       (spec sản phẩm, roadmap, API docs)
-  ├─ Specs/         (Yêu cầu dự án, PRD, kiến trúc)
-  ├─ Templates/     (Content brief, caption, post plan…)
-  ├─ Assets/        (Hình ảnh, video, audio, slide)
-  └─ … (các thư mục khác theo nhu cầu)
+├─ Business/ (tài liệu về công ty, quy trình nội bộ)
+├─ Product/ (spec sản phẩm, roadmap, API docs)
+├─ Specs/ (Yêu cầu dự án, PRD, kiến trúc)
+├─ Templates/ (Content brief, caption, post plan…)
+├─ Assets/ (Hình ảnh, video, audio, slide)
+└─ … (các thư mục khác theo nhu cầu)
 
 DriveFolder & DriveFile
 
@@ -1400,6 +1401,7 @@ Mục đích
 Cung cấp cái nhìn trực quan về hiệu quả marketing và năng suất làm việc của đội ngũ. Dashboard hỗ trợ ra quyết định nhanh, theo dõi tiến độ và phát hiện vấn đề tắc nghẽn.
 
 Phân loại dashboard
+
 1. Marketing KPI Dashboard
 
 Post count: số lượng bài đăng (theo nền tảng, thời gian).
@@ -1420,7 +1422,7 @@ Platform breakdown: phân tích từng mạng xã hội (FB/IG/Zalo) để so s�
 
 Velocity: điểm (estimate) hoàn thành mỗi Phase; so sánh với trung bình 5 phase gần nhất.
 
-Lead time & Cycle time: thời gian trung bình để hoàn thành Task (đồng bộ với workflow).
+Lead time & Phase time: thời gian trung bình để hoàn thành Task (đồng bộ với workflow).
 
 Triage time: thời gian trung bình từ khi Task vào Inbox đến khi được Accept/Decline.
 
@@ -1446,7 +1448,7 @@ KPI calculation
 
 Velocity = Σ estimate của Task có state category completed trong Phase.
 
-Lead time = completedAt – createdAt của Task (hoặc – startedAt nếu tính cycle time).
+Lead time = completedAt – createdAt của Task (hoặc – startedAt nếu tính phase time).
 
 Triage time = firstActionAt (accept/decline) – createdAt của Task.
 
@@ -1508,7 +1510,7 @@ triage-inbox.mdc: triage-inbox.mdc
 
 workflow-status.mdc: workflow-status.mdc
 
-phases-cycles.mdc: phases-cycles.mdc
+phases-phases.mdc: phases-phases.mdc
 
 views-filters.mdc: views-filters.mdc
 
@@ -1524,7 +1526,7 @@ analysis.mdc: analysis.mdc
 
 999-mdc-format.mdc: 999-mdc-format.mdc
 
-Các file trên bao gồm đầy đủ mô tả user stories, API surface, UI contracts, acceptance criteria, metrics và rule hướng dẫn AI/code theo đúng yêu cầu. Bạn có thể tải về và sử dụng làm issue/tài liệu nền tảng cho dự án.
+Các file trên bao gồm đầy đủ mô tả user stories, API surface, UI contracts, acceptance criteria, metrics và rule hướng dẫn AI/code theo đúng yêu cầu. Bạn có thể tải về và sử dụng làm task/tài liệu nền tảng cho dự án.
 
 Bạn đã nói:
 sau đó bạn muốn làm gì tiếp để có app hoạt động được nhanh chóng nhất? Dùng cursor để code, dùng superbase làm backend và vercel để host hay sao?
@@ -1535,7 +1537,7 @@ Tuyệt—mình đề xuất đi theo lộ trình “vertical slice” để có
 
 Dưới đây là kế hoạch cụ thể, copy-paste theo thứ tự làm:
 
-0) Quyết định tech ngay từ đầu
+0. Quyết định tech ngay từ đầu
 
 Frontend: Next.js 14 (App Router), TypeScript, Tailwind, shadcn/ui, Zustand (state cục bộ), TanStack Query (server state).
 
@@ -1547,7 +1549,7 @@ Host: Vercel (Edge), Vercel Cron gọi scheduler tick. (Nếu cần job dài →
 
 Search/RAG (sau MVP): pgvector; Drive integration nối sau.
 
-1) Khởi tạo repo & Cursor
+1. Khởi tạo repo & Cursor
 
 Tạo repo Next.js (App Router), thêm Tailwind, shadcn/ui, Zustand, TanStack Query.
 
@@ -1560,25 +1562,25 @@ Attach docs/PRD.md, ARCHITECTURE.md, DATA-MODEL.md khi gen code những phần t
 Cấu trúc src sơ khởi
 
 src/
-  app/
-    (auth)/sign-in/...
-    (dash)/tasks/...
-    api/ai/generate/route.ts
-    api/tasks/route.ts
-    api/triage/route.ts
-    api/scheduler/tick/route.ts
-  lib/supabase.ts        # server & client
-  lib/auth.ts            # session helpers
-  lib/rbac.ts            # guard helpers
-  components/
-    shell/Sidebar.tsx
-    tasks/TaskList.tsx
-    tasks/TaskDetail.tsx
-    ai/Panel.tsx
-  stores/
-    ui.ts                 # Zustand UI state
+app/
+(auth)/sign-in/...
+(dash)/tasks/...
+api/ai/generate/route.ts
+api/tasks/route.ts
+api/triage/route.ts
+api/scheduler/tick/route.ts
+lib/supabase.ts # server & client
+lib/auth.ts # session helpers
+lib/rbac.ts # guard helpers
+components/
+shell/Sidebar.tsx
+tasks/TaskList.tsx
+tasks/TaskDetail.tsx
+ai/Panel.tsx
+stores/
+ui.ts # Zustand UI state
 
-2) Supabase: tạo project & schema tối thiểu (MVP)
+2. Supabase: tạo project & schema tối thiểu (MVP)
 
 Tạo project Supabase → bật pgvector (Database → Extensions).
 
@@ -1588,141 +1590,140 @@ Tạo bảng tối thiểu (copy vào SQL Editor):
 create type role as enum ('owner','admin','member','guest');
 
 create table workspace (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  slug text unique not null
+id uuid primary key default gen_random_uuid(),
+name text not null,
+slug text unique not null
 );
 
 create table team (
-  id uuid primary key default gen_random_uuid(),
-  workspace_id uuid references workspace(id) on delete cascade,
-  name text not null,
-  key text not null, -- ví dụ AIM
-  unique(workspace_id, key)
+id uuid primary key default gen_random_uuid(),
+workspace_id uuid references workspace(id) on delete cascade,
+name text not null,
+key text not null, -- ví dụ AIM
+unique(workspace_id, key)
 );
 
 create table member (
-  user_id uuid primary key,        -- supabase.auth.users.id
-  display_name text,
-  avatar_url text
+user_id uuid primary key, -- supabase.auth.users.id
+display_name text,
+avatar_url text
 );
 
 create table membership (
-  team_id uuid references team(id) on delete cascade,
-  user_id uuid references member(user_id) on delete cascade,
-  role role not null default 'member',
-  primary key (team_id, user_id)
+team_id uuid references team(id) on delete cascade,
+user_id uuid references member(user_id) on delete cascade,
+role role not null default 'member',
+primary key (team_id, user_id)
 );
 
 -- Core tasking
 create type state_category as enum ('unstarted','started','completed','canceled');
 
 create table workflow_state (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid references team(id) on delete cascade,
-  name text not null,              -- Backlog, In Progress, Done...
-  category state_category not null
+id uuid primary key default gen_random_uuid(),
+team_id uuid references team(id) on delete cascade,
+name text not null, -- Backlog, In Progress, Done...
+category state_category not null
 );
 
 create table project (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid references team(id) on delete cascade,
-  name text not null
+id uuid primary key default gen_random_uuid(),
+team_id uuid references team(id) on delete cascade,
+name text not null
 );
 
 create table strategic (
-  id uuid primary key default gen_random_uuid(),
-  workspace_id uuid references workspace(id) on delete cascade,
-  name text not null
+id uuid primary key default gen_random_uuid(),
+workspace_id uuid references workspace(id) on delete cascade,
+name text not null
 );
 
 create table strategic_project (
-  strategic_id uuid references strategic(id) on delete cascade,
-  project_id uuid references project(id) on delete cascade,
-  primary key (strategic_id, project_id)
+strategic_id uuid references strategic(id) on delete cascade,
+project_id uuid references project(id) on delete cascade,
+primary key (strategic_id, project_id)
 );
 
 create table phase (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid references team(id) on delete cascade,
-  name text not null,
-  start_date date not null,
-  end_date date not null
+id uuid primary key default gen_random_uuid(),
+team_id uuid references team(id) on delete cascade,
+name text not null,
+start_date date not null,
+end_date date not null
 );
 
 create table task (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid references team(id) on delete cascade,
-  project_id uuid references project(id),
-  phase_id uuid references phase(id),
-  title text not null,
-  description text,
-  state_id uuid references workflow_state(id),
-  assignee uuid references member(user_id),
-  priority int,                     -- 0..4
-  due_date timestamptz,
-  created_by uuid references member(user_id),
-  created_at timestamptz default now()
+id uuid primary key default gen_random_uuid(),
+team_id uuid references team(id) on delete cascade,
+project_id uuid references project(id),
+phase_id uuid references phase(id),
+title text not null,
+description text,
+state_id uuid references workflow_state(id),
+assignee uuid references member(user_id),
+priority int, -- 0..4
+due_date timestamptz,
+created_by uuid references member(user_id),
+created_at timestamptz default now()
 );
 
 create table task_relation (
-  src uuid references task(id) on delete cascade,
-  dst uuid references task(id) on delete cascade,
-  kind text check (kind in ('subtask','blocks','duplicate','relates')),
-  primary key (src,dst,kind)
+src uuid references task(id) on delete cascade,
+dst uuid references task(id) on delete cascade,
+kind text check (kind in ('subtask','blocks','duplicate','relates')),
+primary key (src,dst,kind)
 );
 
 -- Comments & attachments (AI submit đính kèm)
 create table task_comment (
-  id uuid primary key default gen_random_uuid(),
-  task_id uuid references task(id) on delete cascade,
-  author uuid references member(user_id),
-  body markdown,                    -- dùng text nếu không có ext
-  created_at timestamptz default now()
+id uuid primary key default gen_random_uuid(),
+task_id uuid references task(id) on delete cascade,
+author uuid references member(user_id),
+body markdown, -- dùng text nếu không có ext
+created_at timestamptz default now()
 );
 
 -- AI logs
 create table ai_generation (
-  id uuid primary key default gen_random_uuid(),
-  task_id uuid references task(id) on delete cascade,
-  agent text not null,              -- content-creator, finance...
-  prompt text,
-  sources jsonb,                    -- RAG sources
-  output_markdown text,
-  model text,
-  latency_ms int,
-  created_by uuid references member(user_id),
-  created_at timestamptz default now()
+id uuid primary key default gen_random_uuid(),
+task_id uuid references task(id) on delete cascade,
+agent text not null, -- content-creator, finance...
+prompt text,
+sources jsonb, -- RAG sources
+output_markdown text,
+model text,
+latency_ms int,
+created_by uuid references member(user_id),
+created_at timestamptz default now()
 );
 
 -- Social scheduling (placeholder MVP)
 create table social_account (
-  id uuid primary key default gen_random_uuid(),
-  team_id uuid references team(id) on delete cascade,
-  platform text check (platform in ('facebook','instagram','zalo')),
-  display_name text,
-  secret_ref text                   -- key để đọc token từ vault/service
+id uuid primary key default gen_random_uuid(),
+team_id uuid references team(id) on delete cascade,
+platform text check (platform in ('facebook','instagram','zalo')),
+display_name text,
+secret_ref text -- key để đọc token từ vault/service
 );
 
 create table scheduled_post (
-  id uuid primary key default gen_random_uuid(),
-  task_id uuid references task(id) on delete cascade,
-  account_id uuid references social_account(id),
-  caption text,
-  media jsonb,                      -- refs to supabase storage or drive
-  scheduled_at timestamptz,
-  status text default 'queued'      -- queued|posting|done|error
+id uuid primary key default gen_random_uuid(),
+task_id uuid references task(id) on delete cascade,
+account_id uuid references social_account(id),
+caption text,
+media jsonb, -- refs to supabase storage or drive
+scheduled_at timestamptz,
+status text default 'queued' -- queued|posting|done|error
 );
 
 create table post_result (
-  id uuid primary key default gen_random_uuid(),
-  scheduled_id uuid references scheduled_post(id) on delete cascade,
-  provider_post_id text,
-  status text,
-  error text,
-  created_at timestamptz default now()
+id uuid primary key default gen_random_uuid(),
+scheduled_id uuid references scheduled_post(id) on delete cascade,
+provider_post_id text,
+status text,
+error text,
+created_at timestamptz default now()
 );
-
 
 RLS bật cho tất cả bảng và tạo policy tối thiểu:
 
@@ -1737,11 +1738,13 @@ alter table task_comment enable row level security;
 -- helper: user là member của team?
 create or replace function is_team_member(t uuid)
 returns boolean language sql stable as $$
-  select exists(
-    select 1 from membership m
-    where m.team_id = t and m.user_id = auth.uid()
-  );
-$$;
+select exists(
+select 1 from membership m
+where m.team_id = t and m.user_id = auth.uid()
+);
+
+$$
+;
 
 -- Policy ví dụ
 create policy "team members can read team"
@@ -1857,7 +1860,7 @@ Supabase: auth, postgres, storage, realtime, vector—all-in-one, ship rất nha
 
 Vercel: build Next.js tốt, Edge/cron đơn giản, môi trường preview cho review nhanh.
 
-Cursor: đã có rules & docs → sinh code nhất quán; auto-refactor mapping Issue→Task, Cycle→Phase.
+Cursor: đã có rules & docs → sinh code nhất quán; auto-refactor mapping Task→Task, Phase→Phase.
 
 7) Hạng mục “cắm thật” sau khi demo ổn
 
@@ -1884,11 +1887,11 @@ Tôi đã nhờ 1 Ai agent kiểm tra và phân tích sơ bộ về repo Circle 
 
 1. Những gì Circle đã có
 
-UI giống Linear: Repo sử dụng Next.js, shadcn/ui và Tailwind để dựng UI cho các phần chính như Teams, Projects, Issues (Tasks), Triage (Inbox) và Cycles (Phases). Các trang như team/[teamId], projects, inbox… đã mô phỏng cách bố trí của Linear.
+UI giống Linear: Repo sử dụng Next.js, shadcn/ui và Tailwind để dựng UI cho các phần chính như Teams, Projects, Tasks (Tasks), Triage (Inbox) và Phases (Phases). Các trang như team/[teamId], projects, inbox… đã mô phỏng cách bố trí của Linear.
 
-Data tĩnh: Toàn bộ dữ liệu hiện tại đều nằm trong mock-data và được nạp vào Zustand store. Ví dụ: danh sách tasks (issues) có cấu trúc id, identifier, title, status, assignee, project… đều nằm trong file mock-data/issues.ts
+Data tĩnh: Toàn bộ dữ liệu hiện tại đều nằm trong mock-data và được nạp vào Zustand store. Ví dụ: danh sách tasks (tasks) có cấu trúc id, identifier, title, status, assignee, project… đều nằm trong file mock-data/tasks.ts
 raw.githubusercontent.com
-; danh sách teams, projects, cycles… tương tự
+; danh sách teams, projects, phases… tương tự
 raw.githubusercontent.com
 raw.githubusercontent.com
 .
@@ -1901,7 +1904,7 @@ raw.githubusercontent.com
 
 Authentication / phân quyền: Chưa có login, role, guest, RBAC.
 
-Cơ sở dữ liệu & API: Chưa có schema thực cho Tasks, Projects, Teams, Cycles, Strategic… và API CRUD.
+Cơ sở dữ liệu & API: Chưa có schema thực cho Tasks, Projects, Teams, Phases, Strategic… và API CRUD.
 
 Triage & Workflow thực tế: Inbox chỉ hiển thị dữ liệu mẫu; chưa có luồng Accept/Duplicate/Snooze, chưa tính triage time.
 
@@ -1914,7 +1917,7 @@ Analysis Dashboards: Chưa có bảng điều khiển về velocity, triage time
 3. Đề xuất lộ trình tiếp tục
 Giai đoạn 1: Lên nền tảng
 
-Chuyển dữ liệu mock sang Supabase: Thiết kế schema cho Workspace/Team/Member/Task/Project/Phase/Strategic, áp dụng quy ước Aim (Issue→Task, Cycle→Phase, Initiative→Strategic). Thiết lập RLS để phân quyền theo Team, bật extension pgvector cho future RAG.
+Chuyển dữ liệu mock sang Supabase: Thiết kế schema cho Workspace/Team/Member/Task/Project/Phase/Strategic, áp dụng quy ước Aim (Task→Task, Phase→Phase, Initiative→Strategic). Thiết lập RLS để phân quyền theo Team, bật extension pgvector cho future RAG.
 
 Tích hợp Supabase Auth: Sử dụng email magic link/SSO, đồng bộ user vào bảng member. Thiết lập trang đăng nhập/đăng ký.
 
@@ -2019,7 +2022,7 @@ Tận dụng toàn bộ bộ tài liệu & rules đã có → đảm bảo Curso
 Mình có thể tạo ngay các file bổ sung như CIRCLE-INTEGRATION.md và replace-mock-with-api.mdc để Cursor biết cách nối UI Circle với Supabase/Auth. Bạn muốn mình làm luôn không?
 
 Bạn đã nói:
-Hãy tạo các file bổ sung cho tôi với 
+Hãy tạo các file bổ sung cho tôi với
 ChatGPT đã nói:
 Worked for 2 minutes
 
@@ -2029,11 +2032,11 @@ docs/CIRCLE‑INTEGRATION.md – hướng dẫn tích hợp repo Circle với Su
 Circle Integration Notes
 Overview
 
-Circle is a Next.js project built by indev7 that mimics Linear's UI and uses static mock data. It uses Zustand for state and the mock-data/* directory to define tasks, teams, projects and cycles. There is no backend or authentication; it is a pure front‑end demo. We need to adapt Circle to become the foundation of our Linear‑style Marketing OS.
+Circle is a Next.js project built by indev7 that mimics Linear's UI and uses static mock data. It uses Zustand for state and the mock-data/* directory to define tasks, teams, projects and phases. There is no backend or authentication; it is a pure front‑end demo. We need to adapt Circle to become the foundation of our Linear‑style Marketing OS.
 
 Existing functionality
 
-UI — Circle already has pages for Teams (/teams/[teamId]), Projects (/projects), Issues (Tasks), Triage (Inbox) and Cycles (Phases). The layout uses Next.js 14, shadcn/ui and Tailwind to reproduce Linear's sidebar and content views.
+UI — Circle already has pages for Teams (/teams/[teamId]), Projects (/projects), Tasks (Tasks), Triage (Inbox) and Phases (Phases). The layout uses Next.js 14, shadcn/ui and Tailwind to reproduce Linear's sidebar and content views.
 
 State management — All lists are imported from mock-data/* and stored in a Zustand store. Methods like addTask or removeNotification simply modify in‑memory arrays or log to the console.
 
@@ -2047,7 +2050,7 @@ Add authentication — Use Supabase Auth to let users sign in with magic links o
 
 Replace mock stores — Remove imports from mock-data/* and the Zustand store. Instead, load data from Supabase via @supabase/supabase-js and TanStack Query or SWR. CRUD operations should call Supabase (insert, update, delete) and invalidate queries to refresh.
 
-Rename concepts — Continue the naming conventions defined in our PRD. Replace occurrences of "Issue" with Task, "Cycle" with Phase and "Initiative" with Strategic in code and UI. Keep the page structure and components; only rename labels and data fields.
+Rename concepts — Continue the naming conventions defined in our PRD. Replace occurrences of "Task" with Task, "Phase" with Phase and "Initiative" with Strategic in code and UI. Keep the page structure and components; only rename labels and data fields.
 
 Implement triage and workflow — The Inbox page should list tasks with an unset or "Triage" status. Implement actions to Accept, Decline, Merge or Snooze a task, updating the task row in Supabase and recording the triage time. Workflows and statuses should come from the workflow_state table.
 
@@ -2076,7 +2079,7 @@ Một Ai Agent bảo tôi cần phải thực hiện các bước này, bạn h�
 ChatGPT đã nói:
 Thought for 28s
 
-Ngắn gọn: Có, rất nên làm — và làm sớm (trước khi viết tiếp backend/API thật). “Terminology map” không phải việc giấy tờ; nó là bộ răng cưa ăn khớp giữa UI, docs, code, DB, analytics và AI trong Cursor. Nếu không chốt sớm, bạn sẽ gặp “naming drift” (Issue↔Task, Cycle↔Phase…), tốn refactor, sai query/metrics, AI gen code lệch, và RAG trộn lẫn thuật ngữ.
+Ngắn gọn: Có, rất nên làm — và làm sớm (trước khi viết tiếp backend/API thật). “Terminology map” không phải việc giấy tờ; nó là bộ răng cưa ăn khớp giữa UI, docs, code, DB, analytics và AI trong Cursor. Nếu không chốt sớm, bạn sẽ gặp “naming drift” (Task↔Task, Phase↔Phase…), tốn refactor, sai query/metrics, AI gen code lệch, và RAG trộn lẫn thuật ngữ.
 
 Dưới đây là giải thích chi tiết + cách làm nhanh trong 1 ngày.
 
@@ -2094,7 +2097,7 @@ RAG/Drive & Analytics: tag/label/thực thể nhất quán mới truy xuất và
 
 Những rủi ro nếu bỏ qua
 
-DB/API không đồng bộ (ví dụ bảng issues nhưng UI hiển thị Task).
+DB/API không đồng bộ (ví dụ bảng tasks nhưng UI hiển thị Task).
 
 Triage/Workflow lẫn lộn category (unstarted/started…).
 
@@ -2126,7 +2129,7 @@ Quy tắc số nhiều, viết hoa, URL path, i18n keys.
 
 Viết docs/GLOSSARY.md.
 
-Cập nhật linear-mapping.mdc + thêm “banned terms” (vd. cấm “Issue” trong UI).
+Cập nhật linear-mapping.mdc + thêm “banned terms” (vd. cấm “Task” trong UI).
 
 Viết eslint custom rule/regex check trong CI (fail nếu thấy từ cấm).
 
@@ -2148,8 +2151,8 @@ Glossary gợi ý (cốt lõi)
 
 Linear	Aim (UI VN)	Code/Schema	Ghi chú (ngắn)
 Initiative	Strategic	strategic	Nhóm project
-Issue	Task	task	Đơn vị công việc
-Cycle	Phase	phase	Iteration
+Task	Task	task	Đơn vị công việc
+Phase	Phase	phase	Iteration
 Triage	Triage	triage/inbox	Hộp phân loại
 Project	Project	project	Giữ nguyên
 Milestone	Mốc	milestone	Theo project
@@ -2161,7 +2164,7 @@ Priority	Ưu tiên	priority	0–4
 Assignee	Người phụ trách	assignee	Member id
 Reporter	Người tạo	created_by	Member id
 Due date	Hạn	due_date	ISO
-Sub-issue	Subtask	relation:subtask	Quan hệ
+Sub-task	Subtask	relation:subtask	Quan hệ
 Duplicate	Trùng	relation:duplicate	Merge
 Blocks	Chặn	relation:blocks	Dependency
 View	Chế độ xem	saved_view	Board/List/Timeline
@@ -2199,7 +2202,7 @@ Bạn muốn mình làm gì ngay bây giờ?
 
 Mình có thể tạo luôn docs/GLOSSARY.md (dựa trên bảng trên + mở rộng Marketing layer) và update linear-mapping.mdc để thêm ban-list & ví dụ, kèm eslint rule mẫu.
 
-Hoặc sinh codemod rename nhanh cho một vài key (Issue→Task, Cycle→Phase, …).
+Hoặc sinh codemod rename nhanh cho một vài key (Task→Task, Phase→Phase, …).
 
 Bạn chọn hướng nào, mình làm ngay trong repo hiện tại.
 
@@ -2210,7 +2213,7 @@ Lập kế hoạch lại giúp tôi để bắt đầu dùng codex để thực 
 ChatGPT đã nói:
 Worked for 53 seconds
 
-Dưới đây là kế hoạch chi tiết để bạn bắt đầu dùng Codex (qua Cursor) phát triển ứng dụng “Linear‑style Marketing OS” dựa trên repo Circle hiện có. Kế hoạch chia thành các giai đoạn rõ ràng, liệt kê các đầu việc cần làm, mục tiêu và công cụ hỗ trợ. Bạn có thể copy thẳng vào công cụ quản lý dự án (Linear) thành các issue/epic.
+Dưới đây là kế hoạch chi tiết để bạn bắt đầu dùng Codex (qua Cursor) phát triển ứng dụng “Linear‑style Marketing OS” dựa trên repo Circle hiện có. Kế hoạch chia thành các giai đoạn rõ ràng, liệt kê các đầu việc cần làm, mục tiêu và công cụ hỗ trợ. Bạn có thể copy thẳng vào công cụ quản lý dự án (Linear) thành các task/epic.
 
 1. Chuẩn bị và rà soát
 
@@ -2334,7 +2337,7 @@ Cho phép đính kèm file vào Task và dùng làm nguồn RAG trong AI Panel.
 
 6.4 Analysis Dashboard
 
-Tạo trang /analysis với 2 tab: Productivity (lead/cycle time, triage time, throughput, phase velocity) và Marketing KPI (số bài đăng, reach/CTR nếu API trả về, cadence, time‑to‑publish).
+Tạo trang /analysis với 2 tab: Productivity (lead/phase time, triage time, throughput, phase velocity) và Marketing KPI (số bài đăng, reach/CTR nếu API trả về, cadence, time‑to‑publish).
 
 Dùng charts (recharts) và bảng; API để lấy dữ liệu.
 
@@ -2362,7 +2365,7 @@ Deploy staging (branch staging) và production (branch main); cấu hình previe
 
 Attach docs và rules khi viết code: khi mở file trong Cursor, chọn “Attach docs/PRD.md”, DATA‑MODEL.md, GLOSSARY.md và file rule .mdc tương ứng để Codex hiểu ngữ cảnh.
 
-Chia nhỏ nhiệm vụ: mỗi component/API là một branch hoặc commit; mô tả rõ trong PR/issue.
+Chia nhỏ nhiệm vụ: mỗi component/API là một branch hoặc commit; mô tả rõ trong PR/task.
 
 Review code sinh tự động: so sánh với rules .mdc để kiểm tra naming, RBAC, UI contract.
 
@@ -2370,10 +2373,11 @@ Sửa khi lệch: update hoặc tạo rule mới (ví dụ team-member-rbac.mdc,
 
 10. Quản lý công việc trong Linear
 
-Tạo epics/strategic và issue tương ứng với các giai đoạn nêu trên (Core Linear, Triage, Phase, Project, AI Studio, Social Scheduler, Drive & RAG, Analysis).
+Tạo epics/strategic và task tương ứng với các giai đoạn nêu trên (Core Linear, Triage, Phase, Project, AI Studio, Social Scheduler, Drive & RAG, Analysis).
 
-Mỗi issue nên có mô tả chi tiết, acceptance criteria, link tới docs/rules.
+Mỗi task nên có mô tả chi tiết, acceptance criteria, link tới docs/rules.
 
-Gán assignee và phase (phase = cycle) phù hợp, theo dõi tiến độ trên board.
+Gán assignee và phase (phase = phase) phù hợp, theo dõi tiến độ trên board.
 
 Thực hiện theo lộ trình này sẽ giúp bạn chuyển repo Circle từ bản UI mẫu thành ứng dụng “Linear‑style Marketing OS” hoàn chỉnh, có backend thực, có AI hỗ trợ và các công cụ marketing, đồng thời tận dụng tối đa sức mạnh của Codex và Cursor để tự động hóa quá trình phát triển.
+$$

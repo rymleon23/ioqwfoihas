@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { RiGithubLine } from '@remixicon/react';
 import * as React from 'react';
@@ -14,6 +14,7 @@ import { OrgSwitcher } from '@/components/layout/sidebar/org-switcher';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import Link from 'next/link';
+import Image from 'next/image';
 import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { BackToApp } from '@/components/layout/sidebar/back-to-app';
@@ -78,7 +79,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </div>
                )}
                <a className="my-1.5" href="https://vercel.com/oss">
-                  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+                  <Image
+                     alt="Vercel OSS Program"
+                     src="https://vercel.com/oss/program-badge.svg"
+                     width={210}
+                     height={60}
+                  />
                </a>
                <div className="w-full flex items-center justify-between">
                   <HelpButton />

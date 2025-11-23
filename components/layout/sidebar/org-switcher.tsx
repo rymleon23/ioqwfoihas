@@ -18,11 +18,22 @@ import {
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { CreateNewIssue } from './create-new-issue';
+import { CreateNewTask } from './create-new-task';
 import { ThemeToggle } from '../theme-toggle';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export function OrgSwitcher() {
+   const router = useRouter();
+   const supabase = createClient();
+
+   const handleLogout = async () => {
+      await supabase.auth.signOut();
+      router.push('/login');
+      router.refresh();
+   };
+
    return (
       <SidebarMenu>
          <SidebarMenuItem>
@@ -45,7 +56,7 @@ export function OrgSwitcher() {
 
                   <ThemeToggle />
 
-                  <CreateNewIssue />
+                  <CreateNewTask />
                </div>
                <DropdownMenuContent
                   className="w-[--radix-dropdown-menu-trigger-width] min-w-60 rounded-lg"
@@ -85,7 +96,7 @@ export function OrgSwitcher() {
                         </DropdownMenuSubContent>
                      </DropdownMenuPortal>
                   </DropdownMenuSub>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                      Log out
                      <DropdownMenuShortcut>⌥⇧Q</DropdownMenuShortcut>
                   </DropdownMenuItem>

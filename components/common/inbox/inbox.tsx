@@ -23,8 +23,8 @@ import {
    Archive,
    ArrowUpDown,
 } from 'lucide-react';
-import NotificationPreview from './issue-preview';
-import IssueLine from './issue-line';
+import NotificationPreview from './task-preview';
+import TaskLine from './task-line';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function Inbox() {
@@ -70,8 +70,8 @@ export default function Inbox() {
       console.log('Delete read notifications');
    };
 
-   const handleDeleteCompletedIssues = () => {
-      console.log('Delete notifications for completed issues');
+   const handleDeleteCompletedTasks = () => {
+      console.log('Delete notifications for completed tasks');
    };
 
    return (
@@ -100,9 +100,9 @@ export default function Inbox() {
                            <CheckCheck className="w-4 h-4 mr-2" />
                            Delete all read notifications
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDeleteCompletedIssues}>
+                        <DropdownMenuItem onClick={handleDeleteCompletedTasks}>
                            <Archive className="w-4 h-4 mr-2" />
-                           Delete notifications for completed issues
+                           Delete notifications for completed tasks
                         </DropdownMenuItem>
                      </DropdownMenuContent>
                   </DropdownMenu>
@@ -203,7 +203,7 @@ export default function Inbox() {
             </div>
             <div className="w-full flex flex-col items-center justify-start overflow-y-scroll h-[calc(100%-40px)] pb-0.25">
                {filteredNotifications.map((notification) => (
-                  <IssueLine
+                  <TaskLine
                      key={notification.id}
                      notification={notification}
                      isSelected={selectedNotification?.id === notification.id}

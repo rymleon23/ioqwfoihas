@@ -1,0 +1,9 @@
+{
+   "git": {
+      "productionBranch": "main",
+      "deploymentEnabled": {
+         "main": true,
+         "staging": true
+      }
+   }
+}

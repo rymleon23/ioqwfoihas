@@ -8,7 +8,7 @@
 <br />
 <br />
 
-Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of issues, projects and teams with a modern, responsive UI.
+Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of tasks, projects and teams with a modern, responsive UI.
 
 ## 🛠️ Technologies
 
@@ -45,3 +45,17 @@ pnpm dev
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ln-dev7/circle&type=Date" />
  </picture>
 </a>
+## Local Setup
+1. Cài đặt [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) (hoặc nvm-windows), sau đó chạy `nvm install` và `nvm use` (file `.nvmrc` đặt Node 18.20.4).
+2. Cài [pnpm](https://pnpm.io/installation) nếu chưa có.
+3. Sao chép `.env.example` thành `.env.local` và điền các khóa Supabase / AI theo môi trường làm việc.
+4. Cài dependencies: `pnpm install`.
+5. (Tuỳ chọn) Nếu chạy Supabase cục bộ, chắc chắn đã cài [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) rồi chạy `pnpm supabase:start` trong terminal khác.
+6. Khởi động ứng dụng: `pnpm dev`.
+
+### Scripts hữu ích
+
+- `pnpm typecheck`: chạy TypeScript ở chế độ `--noEmit`.
+- `pnpm lint`: lint Next.js/ESLint.
+- `pnpm test`: placeholder, in ra thông báo TODO (sẽ thay bằng test runner sau).
+- `pnpm supabase:start`: tiện chạy `supabase start` (yêu cầu Supabase CLI).

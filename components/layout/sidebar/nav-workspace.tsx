@@ -48,7 +48,7 @@ export function NavWorkspace() {
                   <DropdownMenuContent className="w-48 rounded-lg" side="bottom" align="start">
                      <DropdownMenuItem>
                         <RiPresentationLine className="text-muted-foreground" />
-                        <span>Initiatives</span>
+                        <span>Strategic</span>
                      </DropdownMenuItem>
                      <DropdownMenuItem>
                         <Layers className="text-muted-foreground" />

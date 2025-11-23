@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const geistSans = Geist({
@@ -21,7 +20,7 @@ export const metadata: Metadata = {
       default: 'Circle by lndev-ui',
    },
    description:
-      'Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of issues, projects and teams with a modern, responsive UI.',
+      'Project management interface inspired by Linear. Built with Next.js and shadcn/ui, this application allows tracking of tasks, projects and teams with a modern, responsive UI.',
    openGraph: {
       type: 'website',
       locale: 'en_US',
@@ -53,7 +52,7 @@ export const metadata: Metadata = {
    keywords: ['ui', 'lndev', 'components', 'template'],
 };
 
-import { ThemeProvider } from '@/components/layout/theme-provider';
+import { Providers } from '@/components/providers';
 
 export default function RootLayout({
    children,
@@ -66,10 +65,7 @@ export default function RootLayout({
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
          </head>
          <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
-            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-               {children}
-               <Toaster />
-            </ThemeProvider>
+            <Providers>{children}</Providers>
          </body>
       </html>
    );
