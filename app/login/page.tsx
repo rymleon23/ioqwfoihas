@@ -1,4 +1,5 @@
 'use client';
+// v1.1.0 - Auth features with Password, Register, Onboarding
 
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
