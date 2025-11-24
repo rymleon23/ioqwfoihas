@@ -54,7 +54,7 @@ export default function LoginPage() {
       setIsLoading(true);
 
       try {
-         const { error } = await supabase.auth.signInWithPassword({
+         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
          });
@@ -63,9 +63,24 @@ export default function LoginPage() {
             toast.error('Error signing in', {
                description: error.message,
             });
+            return;
+         }
+
+         // Check if user has workspace
+         const { data: userProfile } = await supabase
+            .from('users')
+            .select('workspace_id')
+            .eq('id', data.user.id)
+            .single();
+
+         toast.success('Signed in successfully');
+
+         if (userProfile?.workspace_id) {
+            // User has workspace, redirect to it
+            router.push(`/app/${userProfile.workspace_id}`);
          } else {
-            toast.success('Signed in successfully');
-            router.refresh();
+            // User doesn't have workspace, go to onboarding
+            router.push('/onboarding');
          }
       } catch {
          toast.error('Something went wrong. Please try again.');

@@ -8,17 +8,35 @@ export async function GET(request: Request) {
 
    if (code) {
       const supabase = await createClient();
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) {
+      const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error && data.user) {
+         // Check if user has workspace
+         const { data: userProfile } = await supabase
+            .from('users')
+            .select('workspace_id')
+            .eq('id', data.user.id)
+            .single();
+
+         // Determine redirect URL
+         let redirectPath = next;
+         if (next === '/') {
+            // If default redirect, check workspace
+            if (userProfile?.workspace_id) {
+               redirectPath = `/app/${userProfile.workspace_id}`;
+            } else {
+               redirectPath = '/onboarding';
+            }
+         }
+
          const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
          const isLocalEnv = process.env.NODE_ENV === 'development';
          if (isLocalEnv) {
             // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-            return NextResponse.redirect(`${origin}${next}`);
+            return NextResponse.redirect(`${origin}${redirectPath}`);
          } else if (forwardedHost) {
-            return NextResponse.redirect(`https://${forwardedHost}${next}`);
+            return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`);
          } else {
-            return NextResponse.redirect(`${origin}${next}`);
+            return NextResponse.redirect(`${origin}${redirectPath}`);
          }
       } else {
          console.error('Auth code exchange error:', error);
