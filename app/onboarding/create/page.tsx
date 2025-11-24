@@ -63,11 +63,12 @@ export default function CreateWorkspacePage() {
                 return;
             }
 
-            // 2. Update User (Assign to Workspace)
+            // 2. Update User (Assign to Workspace as Admin)
             const { error: userError } = await supabase
                 .from('users')
                 .update({
                     workspace_id: workspace.id,
+                    role: 'admin',
                 })
                 .eq('id', user.id);
 
