@@ -16,7 +16,7 @@ export default function OnboardingPage() {
                 className="w-full max-w-3xl space-y-8"
             >
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Welcome to Circle</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Welcome to AiM</h1>
                     <p className="text-muted-foreground">
                         To get started, please create a new workspace or join an existing one.
                     </p>

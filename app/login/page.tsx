@@ -120,7 +120,7 @@ export default function LoginPage() {
                      <circle cx="12" cy="12" r="4" />
                   </svg>
                </div>
-               <h1 className="text-2xl font-semibold tracking-tight">Welcome to Circle</h1>
+               <h1 className="text-2xl font-semibold tracking-tight">Welcome to AiM</h1>
                <p className="text-sm text-muted-foreground">
                   Sign in to your account to continue
                </p>

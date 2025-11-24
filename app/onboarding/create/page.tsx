@@ -131,7 +131,7 @@ export default function CreateWorkspacePage() {
                         <div className="space-y-2">
                             <Label htmlFor="slug">Workspace URL</Label>
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm text-muted-foreground">app.circle.com/</span>
+                                <span className="text-sm text-muted-foreground">app.aim.com/</span>
                                 <Input
                                     id="slug"
                                     placeholder="acme-corp"
