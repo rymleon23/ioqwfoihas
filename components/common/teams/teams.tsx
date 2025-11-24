@@ -1,9 +1,18 @@
 'use client';
 
-import { teams } from '@/mock-data/teams';
+import { useTeams } from '@/hooks/use-teams';
 import TeamLine from './team-line';
+import { useParams } from 'next/navigation';
 
 export default function Teams() {
+   const params = useParams();
+   const orgId = params.orgId as string;
+   const { data: teams, isLoading } = useTeams(orgId);
+
+   if (isLoading) {
+      return <div className="p-6 text-sm text-muted-foreground">Loading teams...</div>;
+   }
+
    return (
       <div className="w-full">
          <div className="bg-container px-6 py-1.5 text-sm flex items-center text-muted-foreground border-b sticky top-0 z-10">
@@ -15,9 +24,14 @@ export default function Teams() {
          </div>
 
          <div className="w-full">
-            {teams.map((team) => (
+            {teams?.map((team) => (
                <TeamLine key={team.id} team={team} />
             ))}
+            {!teams?.length && (
+               <div className="p-6 text-center text-sm text-muted-foreground">
+                  No teams found. Create one to get started.
+               </div>
+            )}
          </div>
       </div>
    );

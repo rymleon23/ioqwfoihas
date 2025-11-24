@@ -1,9 +1,18 @@
 'use client';
 
-import { projects } from '@/mock-data/projects';
+import { useProjects } from '@/hooks/use-projects';
 import ProjectLine from '@/components/common/projects/project-line';
+import { useParams } from 'next/navigation';
 
 export default function Projects() {
+   const params = useParams();
+   const orgId = params.orgId as string;
+   const { data: projects, isLoading } = useProjects(orgId);
+
+   if (isLoading) {
+      return <div className="p-6 text-sm text-muted-foreground">Loading projects...</div>;
+   }
+
    return (
       <div className="w-full">
          <div className="bg-container px-6 py-1.5 text-sm flex items-center text-muted-foreground border-b sticky top-0 z-10">
@@ -16,9 +25,14 @@ export default function Projects() {
          </div>
 
          <div className="w-full">
-            {projects.map((project) => (
+            {projects?.map((project) => (
                <ProjectLine key={project.id} project={project} />
             ))}
+            {!projects?.length && (
+               <div className="p-6 text-center text-sm text-muted-foreground">
+                  No projects found.
+               </div>
+            )}
          </div>
       </div>
    );

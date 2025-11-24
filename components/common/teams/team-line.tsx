@@ -1,4 +1,4 @@
-import { Team } from '@/mock-data/teams';
+import { Team } from '@/hooks/use-teams';
 import { MembersTooltip } from './members-tooltip';
 import { ProjectsTooltip } from './projects-tooltip';
 import { Check } from 'lucide-react';

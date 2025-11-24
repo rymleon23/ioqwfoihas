@@ -16,13 +16,18 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/compone
 import Link from 'next/link';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { BackToApp } from '@/components/layout/sidebar/back-to-app';
+import { useWorkspace } from '@/hooks/use-workspace';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
    const [open, setOpen] = React.useState(true);
    const pathname = usePathname();
+   const params = useParams();
+   const orgId = params.orgId as string;
+   const { data: workspace } = useWorkspace(orgId);
    const isSettings = pathname.includes('/settings');
+
    return (
       <Sidebar collapsible="offcanvas" {...props}>
          <SidebarHeader>{isSettings ? <BackToApp /> : <OrgSwitcher />}</SidebarHeader>
@@ -53,29 +58,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <X className="size-4" />
                      </div>
                      <div className="text-balance text-lg font-semibold leading-tight group-hover/sidebar:underline">
-                        Open-source layouts by lndev-ui
+                        {workspace?.name || 'Loading...'}
                      </div>
                      <div>
-                        Collection of beautifully crafted open-source layouts UI built with
-                        shadcn/ui.
+                        Workspace ID: {workspace?.id}
                      </div>
-                     <Link
-                        target="_blank"
-                        rel="noreferrer"
-                        className="absolute inset-0"
-                        href="https://square.lndev.me"
-                     >
-                        <span className="sr-only">Square by lndev-ui</span>
-                     </Link>
-                     <Button size="sm" className="w-full">
-                        <Link
-                           href="https://square.lndev.me"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                        >
-                           square.lndev.me
-                        </Link>
-                     </Button>
                   </div>
                )}
                <a className="my-1.5" href="https://vercel.com/oss">

@@ -13,12 +13,16 @@ export default async function DashboardPage() {
       return redirect('/login');
    }
 
-   return (
-      <MainLayout>
-         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Circle</h1>
-            <p>Select a team or project from the sidebar to get started.</p>
-         </div>
-      </MainLayout>
-   );
+   // Fetch user profile to check workspace_id
+   const { data: userProfile } = await supabase
+      .from('users')
+      .select('workspace_id')
+      .eq('id', user.id)
+      .single();
+
+   if (userProfile?.workspace_id) {
+      return redirect(`/app/${userProfile.workspace_id}`);
+   }
+
+   return redirect('/onboarding');
 }

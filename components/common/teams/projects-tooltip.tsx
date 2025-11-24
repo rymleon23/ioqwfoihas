@@ -1,8 +1,13 @@
 'use client';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Project } from '@/mock-data/projects';
 import { Box } from 'lucide-react';
+
+interface Project {
+   id: string;
+   name: string;
+   icon: string | null;
+}
 
 interface ProjectsTooltipProps {
    projects: Project[];
@@ -22,11 +27,10 @@ export function ProjectsTooltip({ projects }: ProjectsTooltipProps) {
                <div className="flex flex-col gap-1">
                   {projects.map((project, index) => (
                      <div key={index} className="flex items-center gap-1.5">
-                        <project.icon className="size-4 shrink-0" />
-                        <span className="text-sm w-full text-left">{project?.name}</span>
-                        <div className="shrink-0">
-                           <project.status.icon />
+                        <div className="size-4 shrink-0 flex items-center justify-center text-xs">
+                           {project.icon || <Box className="size-3" />}
                         </div>
+                        <span className="text-sm w-full text-left">{project?.name}</span>
                      </div>
                   ))}
                </div>

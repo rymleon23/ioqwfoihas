@@ -2,10 +2,17 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { User } from '@/mock-data/users';
+
+interface Member {
+   id: string;
+   avatar_url: string | null;
+   display_name: string | null;
+   email: string;
+   role: string;
+}
 
 interface MembersTooltipProps {
-   members: User[];
+   members: Member[];
 }
 
 export function MembersTooltip({ members }: MembersTooltipProps) {
@@ -19,8 +26,10 @@ export function MembersTooltip({ members }: MembersTooltipProps) {
                <div className="flex -space-x-2">
                   {displayedMembers.map((member, index) => (
                      <Avatar key={index} className="size-6 border-2 border-container">
-                        <AvatarImage src={member.avatarUrl} alt={member.name} />
-                        <AvatarFallback className="text-xs">{member.name[0]}</AvatarFallback>
+                        <AvatarImage src={member.avatar_url || ''} alt={member.display_name || ''} />
+                        <AvatarFallback className="text-xs">
+                           {member.display_name?.[0] || '?'}
+                        </AvatarFallback>
                      </Avatar>
                   ))}
                   {remainingCount > 0 && (
@@ -35,10 +44,12 @@ export function MembersTooltip({ members }: MembersTooltipProps) {
                   {members.map((member, index) => (
                      <div key={index} className="flex items-center gap-1.5">
                         <Avatar className="size-5">
-                           <AvatarImage src={member.avatarUrl} alt={member.name} />
-                           <AvatarFallback className="text-[10px]">{member.name[0]}</AvatarFallback>
+                           <AvatarImage src={member.avatar_url || ''} alt={member.display_name || ''} />
+                           <AvatarFallback className="text-[10px]">
+                              {member.display_name?.[0] || '?'}
+                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">{member.name}</span>
+                        <span className="text-sm">{member.display_name}</span>
                         <span className="text-xs text-muted-foreground mt-[1px]">
                            {' '}
                            - {member.email}
