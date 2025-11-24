@@ -5,13 +5,11 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useTeams } from '@/hooks/use-teams';
 import { Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { usePermission } from '@/hooks/use-permission';
 
 export default function HeaderNav() {
    const params = useParams();
    const orgId = params.orgId as string;
    const { data: teams } = useTeams(orgId);
-   const { can } = usePermission(); // Note: usePermission usually needs teamId, but for "Add Team" it might be workspace level or just check if user is admin/owner of workspace?
    // The rule says: "The user who creates a team becomes the Owner."
    // "Owner/Admin | Yes (Team settings) | Yes (Manage members) | Yes (Create/Edit Task or Project)"
    // But creating a team is usually a workspace level permission.

@@ -46,7 +46,7 @@ export default function RegisterPage() {
                     description: 'Please check your email to verify your account.',
                 });
                 // Optional: Redirect to a "verify email" page or login
-                // router.push('/login');
+                router.push('/login');
             }
         } catch {
             toast.error('Something went wrong. Please try again.');

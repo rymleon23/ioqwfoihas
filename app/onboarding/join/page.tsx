@@ -36,7 +36,7 @@ export default function JoinWorkspacePage() {
                         <Mail className="h-6 w-6 text-primary" />
                     </div>
                     <p className="text-center text-sm text-muted-foreground">
-                        If you haven't received an invite, please contact your workspace administrator to send you one.
+                        If you haven&apos;t received an invite, please contact your workspace administrator to send you one.
                     </p>
                 </div>
 

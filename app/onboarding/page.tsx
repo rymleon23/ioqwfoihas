@@ -50,7 +50,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <CardTitle>Join an existing Workspace</CardTitle>
                                 <CardDescription>
-                                    Accept an invitation or find your team's workspace.
+                                    Accept an invitation or find your team&apos;s workspace.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
