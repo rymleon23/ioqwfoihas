@@ -77,8 +77,25 @@ export default function CreateWorkspacePage() {
                 return;
             }
 
+            // 3. Create a default team
+            const { data: team, error: teamError } = await supabase
+                .from('team')
+                .insert({
+                    workspace_id: workspace.id,
+                    name: 'General',
+                    key: 'GEN',
+                    description: 'Default team',
+                })
+                .select()
+                .single();
+
+            if (teamError) {
+                console.error('Error creating default team:', teamError);
+                // Don't block if team creation fails, user can create manually
+            }
+
             toast.success('Workspace created successfully!');
-            // Redirect to the new workspace (auto-redirects to team)
+            // Redirect to the new workspace (auto-redirects to first team)
             router.push(`/${workspace.id}`);
         } catch (error) {
             toast.error('Something went wrong. Please try again.');
