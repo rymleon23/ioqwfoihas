@@ -22,7 +22,7 @@ export async function GET(request: Request) {
          if (next === '/') {
             // If default redirect, check workspace
             if (userProfile?.workspace_id) {
-               redirectPath = `/app/${userProfile.workspace_id}`;
+               redirectPath = `/${userProfile.workspace_id}/team`;
             } else {
                redirectPath = '/onboarding';
             }
