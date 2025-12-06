@@ -76,8 +76,8 @@ export default function LoginPage() {
          toast.success('Signed in successfully');
 
          if (userProfile?.workspace_id) {
-            // User has workspace, redirect to workspace team page
-            router.push(`/${userProfile.workspace_id}/team`);
+            // User has workspace, redirect to workspace (auto-redirects to team)
+            router.push(`/${userProfile.workspace_id}`);
          } else {
             // User doesn't have workspace, go to onboarding
             router.push('/onboarding');

@@ -79,8 +79,8 @@ export default function CreateWorkspacePage() {
             }
 
             toast.success('Workspace created successfully!');
-            // Redirect to the new workspace
-            router.push(`/${workspace.id}/team`);
+            // Redirect to the new workspace (auto-redirects to team)
+            router.push(`/${workspace.id}`);
         } catch (error) {
             toast.error('Something went wrong. Please try again.');
             console.error(error);
