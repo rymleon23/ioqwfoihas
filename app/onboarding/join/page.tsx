@@ -1,11 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function JoinWorkspacePage() {
+    const router = useRouter();
+    const supabase = createClient();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleBackToLogin = async () => {
+        setIsLoggingOut(true);
+        await supabase.auth.signOut();
+        router.push('/login');
+    };
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <motion.div
@@ -41,8 +54,13 @@ export default function JoinWorkspacePage() {
                 </div>
 
                 <div className="text-center">
-                    <Button variant="outline" asChild>
-                        <Link href="/login">Back to Login</Link>
+                    <Button
+                        variant="outline"
+                        onClick={handleBackToLogin}
+                        disabled={isLoggingOut}
+                    >
+                        {isLoggingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Back to Login
                     </Button>
                 </div>
             </motion.div>
