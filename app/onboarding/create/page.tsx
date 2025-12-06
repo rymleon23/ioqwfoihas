@@ -63,12 +63,11 @@ export default function CreateWorkspacePage() {
                 return;
             }
 
-            // 2. Update User (Assign to Workspace as Admin)
+            // 2. Update User (Assign to Workspace)
             const { error: userError } = await supabase
                 .from('users')
                 .update({
                     workspace_id: workspace.id,
-                    role: 'admin',
                 })
                 .eq('id', user.id);
 
@@ -80,7 +79,8 @@ export default function CreateWorkspacePage() {
             }
 
             toast.success('Workspace created successfully!');
-            router.push(`/app/${workspace.id}`);
+            // Redirect to the new workspace
+            router.push(`/${workspace.id}/team`);
         } catch (error) {
             toast.error('Something went wrong. Please try again.');
             console.error(error);
