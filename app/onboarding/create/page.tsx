@@ -63,17 +63,16 @@ export default function CreateWorkspacePage() {
                 return;
             }
 
-            // 2. Update User (Assign to Workspace)
-            const { error: userError } = await supabase
-                .from('users')
-                .update({
-                    workspace_id: workspace.id,
-                })
-                .eq('id', user.id);
+            // 2. Assign User to Workspace using RPC (bypasses RLS to avoid stack depth error)
+            const { data: rpcResult, error: userError } = await supabase
+                .rpc('assign_user_to_workspace', {
+                    p_user_id: user.id,
+                    p_workspace_id: workspace.id
+                });
 
-            if (userError) {
-                toast.error('Error updating user profile', {
-                    description: userError.message,
+            if (userError || (rpcResult && !rpcResult.success)) {
+                toast.error('Error assigning user to workspace', {
+                    description: userError?.message || rpcResult?.error || 'Unknown error',
                 });
                 return;
             }
