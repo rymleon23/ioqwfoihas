@@ -1,5 +1,6 @@
 -- Migration: Enable Personal Tasks (Tasks without Team)
 -- Run this in Supabase SQL Editor
+-- SIMPLIFIED VERSION - No workflow state changes needed
 
 -- ==================================================
 -- STEP 1: Make team_id nullable in task table
@@ -8,87 +9,24 @@
 ALTER TABLE task ALTER COLUMN team_id DROP NOT NULL;
 
 -- ==================================================
--- STEP 2: Add default workflow_state for personal tasks
+-- STEP 2: Make state_id nullable for personal tasks
 -- ==================================================
 
--- Create a function to get or create personal workflow states
-CREATE OR REPLACE FUNCTION get_personal_workflow_state(
-    p_workspace_id UUID,
-    p_state_type TEXT DEFAULT 'unstarted'
-)
-RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_state_id UUID;
-BEGIN
-    -- Check if personal workflow state exists
-    SELECT id INTO v_state_id
-    FROM workflow_state
-    WHERE workspace_id = p_workspace_id
-      AND team_id IS NULL
-      AND type = p_state_type
-    LIMIT 1;
-    
-    -- If not exists, create it
-    IF v_state_id IS NULL THEN
-        INSERT INTO workflow_state (workspace_id, team_id, name, type, color, position)
-        VALUES (
-            p_workspace_id,
-            NULL,
-            CASE p_state_type
-                WHEN 'backlog' THEN 'Backlog'
-                WHEN 'unstarted' THEN 'Todo'
-                WHEN 'started' THEN 'In Progress'
-                WHEN 'completed' THEN 'Done'
-                WHEN 'canceled' THEN 'Canceled'
-                ELSE 'Unknown'
-            END,
-            p_state_type,
-            CASE p_state_type
-                WHEN 'backlog' THEN '#6B7280'
-                WHEN 'unstarted' THEN '#3B82F6'
-                WHEN 'started' THEN '#F59E0B'
-                WHEN 'completed' THEN '#10B981'
-                WHEN 'canceled' THEN '#EF4444'
-                ELSE '#6B7280'
-            END,
-            CASE p_state_type
-                WHEN 'backlog' THEN 0
-                WHEN 'unstarted' THEN 1
-                WHEN 'started' THEN 2
-                WHEN 'completed' THEN 3
-                WHEN 'canceled' THEN 4
-                ELSE 5
-            END
-        )
-        RETURNING id INTO v_state_id;
-    END IF;
-    
-    RETURN v_state_id;
-END;
-$$;
+ALTER TABLE task ALTER COLUMN state_id DROP NOT NULL;
 
 -- ==================================================
--- STEP 3: Create personal default workflow states for existing workspaces
+-- STEP 3: Add status field for personal tasks
 -- ==================================================
 
-DO $$
-DECLARE
-    ws RECORD;
-BEGIN
-    FOR ws IN SELECT id FROM workspace LOOP
-        PERFORM get_personal_workflow_state(ws.id, 'backlog');
-        PERFORM get_personal_workflow_state(ws.id, 'unstarted');
-        PERFORM get_personal_workflow_state(ws.id, 'started');
-        PERFORM get_personal_workflow_state(ws.id, 'completed');
-        PERFORM get_personal_workflow_state(ws.id, 'canceled');
-    END LOOP;
-END;
-$$;
+-- Add a simple status field for tasks without workflow_state
+ALTER TABLE task ADD COLUMN IF NOT EXISTS status text 
+    CHECK (status IN ('todo', 'in_progress', 'done', 'canceled'));
+
+-- Set default status
+ALTER TABLE task ALTER COLUMN status SET DEFAULT 'todo';
 
 -- ==================================================
--- STEP 4: Add index for personal tasks query optimization
+-- STEP 4: Add index for personal tasks query
 -- ==================================================
 
 CREATE INDEX IF NOT EXISTS idx_task_personal 
@@ -105,7 +43,7 @@ DROP POLICY IF EXISTS "Users can create personal tasks" ON task;
 DROP POLICY IF EXISTS "Users can update their personal tasks" ON task;
 DROP POLICY IF EXISTS "Users can delete their personal tasks" ON task;
 
--- Create new policies
+-- Create new policies for personal tasks
 CREATE POLICY "Users can view their personal tasks"
 ON task FOR SELECT
 USING (
@@ -151,7 +89,6 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_task_id UUID;
-    v_state_id UUID;
     v_user_id UUID;
     v_result json;
 BEGIN
@@ -162,10 +99,7 @@ BEGIN
         RETURN json_build_object('success', false, 'error', 'Not authenticated');
     END IF;
     
-    -- Get default state (unstarted/Todo)
-    v_state_id := get_personal_workflow_state(p_workspace_id, 'unstarted');
-    
-    -- Create the task
+    -- Create the personal task (no team_id, no state_id, use status instead)
     INSERT INTO task (
         workspace_id,
         team_id,
@@ -173,15 +107,17 @@ BEGIN
         description,
         priority,
         state_id,
+        status,
         assignee_id,
         created_by
     ) VALUES (
         p_workspace_id,
-        NULL,  -- No team = personal task
+        NULL,           -- No team = personal task
         p_title,
         p_description,
         p_priority,
-        v_state_id,
+        NULL,           -- No workflow state
+        'todo',         -- Simple status
         v_user_id,
         v_user_id
     )
@@ -205,8 +141,9 @@ GRANT EXECUTE ON FUNCTION create_personal_task(UUID, TEXT, TEXT, INTEGER) TO aut
 -- DONE! 
 -- ==================================================
 -- Summary:
--- 1. task.team_id is now nullable
--- 2. Personal workflow states created for each workspace
--- 3. Indexes added for performance
--- 4. RLS policies allow users to manage their personal tasks
--- 5. RPC function create_personal_task available
+-- 1. task.team_id is now nullable (personal tasks)
+-- 2. task.state_id is now nullable
+-- 3. Added task.status field for simple status tracking
+-- 4. Indexes added for performance
+-- 5. RLS policies allow users to manage their personal tasks
+-- 6. RPC function create_personal_task available

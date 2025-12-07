@@ -8,17 +8,11 @@ interface PersonalTask {
     title: string;
     description: string | null;
     priority: number;
-    state_id: string;
+    status: 'todo' | 'in_progress' | 'done' | 'canceled';
     assignee_id: string;
     workspace_id: string;
     created_at: string;
     updated_at: string;
-    state?: {
-        id: string;
-        name: string;
-        color: string;
-        type: string;
-    };
 }
 
 interface CreatePersonalTaskInput {
@@ -27,6 +21,20 @@ interface CreatePersonalTaskInput {
     description?: string;
     priority?: number;
 }
+
+const statusColors: Record<string, string> = {
+    todo: '#3B82F6',
+    in_progress: '#F59E0B',
+    done: '#10B981',
+    canceled: '#EF4444',
+};
+
+const statusLabels: Record<string, string> = {
+    todo: 'Todo',
+    in_progress: 'In Progress',
+    done: 'Done',
+    canceled: 'Canceled',
+};
 
 export function usePersonalTasks(workspaceId: string) {
     const supabase = createClient();
@@ -39,10 +47,7 @@ export function usePersonalTasks(workspaceId: string) {
 
             const { data, error } = await supabase
                 .from('task')
-                .select(`
-               *,
-               state:workflow_state(id, name, color, type)
-            `)
+                .select('*')
                 .eq('workspace_id', workspaceId)
                 .eq('assignee_id', user.id)
                 .is('team_id', null)
@@ -81,6 +86,36 @@ export function useCreatePersonalTask() {
     });
 }
 
+export function useUpdatePersonalTaskStatus() {
+    const supabase = createClient();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            taskId,
+            status,
+            workspaceId
+        }: {
+            taskId: string;
+            status: 'todo' | 'in_progress' | 'done' | 'canceled';
+            workspaceId: string;
+        }) => {
+            const { error } = await supabase
+                .from('task')
+                .update({ status })
+                .eq('id', taskId);
+
+            if (error) throw error;
+            return { taskId, status };
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ['personal-tasks', variables.workspaceId]
+            });
+        },
+    });
+}
+
 export function usePersonalTaskStats(workspaceId: string) {
     const supabase = createClient();
 
@@ -92,10 +127,7 @@ export function usePersonalTaskStats(workspaceId: string) {
 
             const { data, error } = await supabase
                 .from('task')
-                .select(`
-               id,
-               state:workflow_state(type)
-            `)
+                .select('id, status')
                 .eq('workspace_id', workspaceId)
                 .eq('assignee_id', user.id)
                 .is('team_id', null);
@@ -104,9 +136,9 @@ export function usePersonalTaskStats(workspaceId: string) {
 
             const stats = {
                 total: data.length,
-                todo: data.filter(t => t.state?.type === 'unstarted').length,
-                inProgress: data.filter(t => t.state?.type === 'started').length,
-                done: data.filter(t => t.state?.type === 'completed').length,
+                todo: data.filter(t => t.status === 'todo').length,
+                inProgress: data.filter(t => t.status === 'in_progress').length,
+                done: data.filter(t => t.status === 'done').length,
             };
 
             return stats;
@@ -114,3 +146,5 @@ export function usePersonalTaskStats(workspaceId: string) {
         enabled: !!workspaceId,
     });
 }
+
+export { statusColors, statusLabels };

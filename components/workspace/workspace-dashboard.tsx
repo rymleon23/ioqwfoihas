@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Plus, Users, CheckSquare, Inbox, ArrowRight } from 'lucide-react';
-import { useCreatePersonalTask, usePersonalTasks } from '@/hooks/usePersonalTasks';
+import { useCreatePersonalTask, usePersonalTasks, statusColors, statusLabels } from '@/hooks/usePersonalTasks';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -152,12 +152,12 @@ export function WorkspaceDashboard({
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     className="h-2 w-2 rounded-full"
-                                                    style={{ backgroundColor: task.state?.color || '#6B7280' }}
+                                                    style={{ backgroundColor: statusColors[task.status] || '#6B7280' }}
                                                 />
                                                 <span>{task.title}</span>
                                             </div>
                                             <span className="text-sm text-muted-foreground">
-                                                {task.state?.name || 'Unknown'}
+                                                {statusLabels[task.status] || 'Unknown'}
                                             </span>
                                         </div>
                                     ))}
