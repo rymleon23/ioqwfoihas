@@ -24,7 +24,7 @@ export default async function OrgIdPage({ params }: OrgIdPageProps) {
    return (
       <div className="flex h-full items-center justify-center">
          <div className="text-center">
-            <h2 className="text-lg font-semibold">Welcome to Circle</h2>
+            <h2 className="text-lg font-semibold">Welcome to AiM</h2>
             <p className="text-muted-foreground">Create a team to get started.</p>
          </div>
       </div>
