@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       .single();
 
    if (userProfile?.workspace_id) {
-      return redirect(`/app/${userProfile.workspace_id}`);
+      return redirect(`/${userProfile.workspace_id}`);
    }
 
    return redirect('/onboarding');
