@@ -1,11 +1,14 @@
-'use client';
-
+import { useState } from 'react';
 import { usePermission } from '@/hooks/use-permission';
 import { useTask, TaskDetail } from '@/hooks/use-task';
+import { useUpdateTask } from '@/hooks/use-update-task';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AiPanel } from '@/components/tasks/ai-panel';
+import { ScheduleModal } from '@/components/marketing/schedule-modal';
+import { Loader2, Calendar, Sparkles, X, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskDetailViewProps {
@@ -14,6 +17,10 @@ interface TaskDetailViewProps {
 
 export function TaskDetailView({ taskId }: TaskDetailViewProps) {
    const { data: task, isLoading, error } = useTask(taskId);
+   const { mutate: updateTask } = useUpdateTask();
+   const [showAiPanel, setShowAiPanel] = useState(false);
+   const [showScheduleModal, setShowScheduleModal] = useState(false);
+
    // Note: We need teamId to check permissions. task object has team_id?
    // Let's assume task object has team_id or we can get it from task.
    // Looking at useTask hook, it selects *, so team_id should be there.
@@ -41,10 +48,19 @@ export function TaskDetailView({ taskId }: TaskDetailViewProps) {
 
    const canEdit = can('edit_task');
 
+   const handleInsertDescription = (content: string) => {
+      // Append content to existing description or replace?
+      // Usually "Insert" means append or replace selection.
+      // For simplicity, let's append with newlines if description exists
+      const newDescription = task.description ? `${task.description}\n\n${content}` : content;
+
+      updateTask({ taskId, description: newDescription });
+   };
+
    return (
       <div className="flex h-full flex-col lg:flex-row">
          {/* Main Content */}
-         <div className="flex-1 space-y-6 p-6">
+         <div className="flex-1 space-y-6 p-6 overflow-y-auto">
             <div className="space-y-2">
                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{task.project?.name}</span>
@@ -80,64 +96,120 @@ export function TaskDetailView({ taskId }: TaskDetailViewProps) {
          </div>
 
          {/* Sidebar */}
-         <div className="w-full border-l bg-muted/10 p-6 lg:w-80 space-y-6">
-            <div className="space-y-4">
-               <div>
-                  <label className="text-xs font-medium text-muted-foreground">Status</label>
-                  <div className="mt-1">
-                     <Badge
-                        variant="secondary"
-                        style={{
-                           backgroundColor: task.workflow_state?.color + '20',
-                           color: task.workflow_state?.color,
-                        }}
-                     >
-                        {task.workflow_state?.name}
-                     </Badge>
-                  </div>
-               </div>
-
-               <div>
-                  <label className="text-xs font-medium text-muted-foreground">Priority</label>
-                  <div className="mt-1">
-                     <Badge variant="outline" className="capitalize">
-                        {task.priority}
-                     </Badge>
-                  </div>
-               </div>
-
-               <div>
-                  <label className="text-xs font-medium text-muted-foreground">Assignee</label>
-                  <div className="mt-1 flex items-center gap-2">
-                     {task.assignee ? (
-                        <>
-                           <Avatar className="h-6 w-6">
-                              <AvatarImage src={task.assignee.avatar_url || undefined} />
-                              <AvatarFallback>
-                                 {task.assignee.display_name?.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                           </Avatar>
-                           <span className="text-sm">{task.assignee.display_name}</span>
-                        </>
-                     ) : (
-                        <span className="text-sm text-muted-foreground">Unassigned</span>
-                     )}
-                  </div>
-               </div>
-
-               <div>
-                  <label className="text-xs font-medium text-muted-foreground">Due Date</label>
-                  <div className="mt-1 flex items-center gap-2 text-sm">
-                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                     <span>
-                        {task.due_date
-                           ? format(new Date(task.due_date), 'MMM d, yyyy')
-                           : 'No due date'}
-                     </span>
-                  </div>
-               </div>
+         <div className="w-full border-l bg-muted/10 lg:w-80 flex flex-col">
+            {/* Sidebar Header with AI Toggle */}
+            <div className="flex items-center justify-between p-4 border-b">
+               <span className="font-semibold text-sm">Properties</span>
+               <Button
+                  variant={showAiPanel ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className={
+                     showAiPanel
+                        ? 'text-purple-600 bg-purple-50 dark:bg-purple-900/20'
+                        : 'text-muted-foreground'
+                  }
+                  onClick={() => setShowAiPanel(!showAiPanel)}
+               >
+                  {showAiPanel ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  <span className="ml-2 text-xs">{showAiPanel ? 'Close AI' : 'AI Assistant'}</span>
+               </Button>
             </div>
+
+            {showAiPanel ? (
+               <AiPanel
+                  taskId={taskId}
+                  className="flex-1 border-none bg-transparent"
+                  onInsertDescription={handleInsertDescription}
+               />
+            ) : (
+               <div className="p-6 space-y-6 overflow-y-auto">
+                  <div className="space-y-4">
+                     <div>
+                        <label className="text-xs font-medium text-muted-foreground">Status</label>
+                        <div className="mt-1">
+                           <Badge
+                              variant="secondary"
+                              style={{
+                                 backgroundColor: task.workflow_state?.color + '20',
+                                 color: task.workflow_state?.color,
+                              }}
+                           >
+                              {task.workflow_state?.name}
+                           </Badge>
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                           Priority
+                        </label>
+                        <div className="mt-1">
+                           <Badge variant="outline" className="capitalize">
+                              {task.priority}
+                           </Badge>
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                           Assignee
+                        </label>
+                        <div className="mt-1 flex items-center gap-2">
+                           {task.assignee ? (
+                              <>
+                                 <Avatar className="h-6 w-6">
+                                    <AvatarImage src={task.assignee.avatar_url || undefined} />
+                                    <AvatarFallback>
+                                       {task.assignee.display_name?.substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                 </Avatar>
+                                 <span className="text-sm">{task.assignee.display_name}</span>
+                              </>
+                           ) : (
+                              <span className="text-sm text-muted-foreground">Unassigned</span>
+                           )}
+                        </div>
+                     </div>
+
+                     <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                           Due Date
+                        </label>
+                        <div className="mt-1 flex items-center gap-2 text-sm">
+                           <Calendar className="h-4 w-4 text-muted-foreground" />
+                           <span>
+                              {task.due_date
+                                 ? format(new Date(task.due_date), 'MMM d, yyyy')
+                                 : 'No due date'}
+                           </span>
+                        </div>
+                     </div>
+
+                     <Separator />
+
+                     <div>
+                        <label className="text-xs font-medium text-muted-foreground">Actions</label>
+                        <div className="mt-2 text-sm">
+                           <Button
+                              variant="outline"
+                              className="w-full justify-start gap-2 h-9 px-2"
+                              onClick={() => setShowScheduleModal(true)}
+                           >
+                              <Share2 className="h-4 w-4 text-muted-foreground" />
+                              <span>Schedule Post</span>
+                           </Button>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            )}
          </div>
+
+         <ScheduleModal
+            open={showScheduleModal}
+            onOpenChange={setShowScheduleModal}
+            defaultContent={`${task.title}\n\n${task.description || ''}`}
+         />
       </div>
    );
 }

@@ -67,11 +67,16 @@ export default function LoginPage() {
          }
 
          // Check if user has workspace
-         const { data: userProfile } = await supabase
+         const { data: userProfile, error: profileError } = await supabase
             .from('users')
             .select('workspace_id')
             .eq('id', data.user.id)
             .single();
+
+         if (profileError) {
+            console.error('Error fetching user profile:', profileError);
+         }
+         console.log('User Profile fetched:', userProfile);
 
          toast.success('Signed in successfully');
 
@@ -136,9 +141,7 @@ export default function LoginPage() {
                   </svg>
                </div>
                <h1 className="text-2xl font-semibold tracking-tight">Welcome to AiM</h1>
-               <p className="text-sm text-muted-foreground">
-                  Sign in to your account to continue
-               </p>
+               <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
             </div>
 
             <Tabs defaultValue="magic-link" className="w-full">
