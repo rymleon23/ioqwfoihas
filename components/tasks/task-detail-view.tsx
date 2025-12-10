@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { usePermission } from '@/hooks/use-permission';
 import { useTask, TaskDetail } from '@/hooks/use-task';
