@@ -39,14 +39,19 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
         id: 'proj_mock',
         name: dbTask.project.name,
         icon: undefined,
-        status: 'active' as const,
+        status: status[0], // Fixed: Use valid Status object from mock-data
         percentComplete: 0,
         startDate: new Date().toISOString(),
         targetDate: new Date().toISOString(),
         lead: null,
         members: [],
-        priority: 'medium' as const, // Added missing field
-        health: 'on_track' as const // Added missing field
+        priority: priorities[0], // Fixed: Use valid Priority object
+        health: { // Fixed: Match Health interface
+            id: 'on-track' as const,
+            name: 'On Track',
+            color: '#00FF00',
+            description: 'The project is on track and on schedule.'
+        }
     } : undefined;
 
     return {
