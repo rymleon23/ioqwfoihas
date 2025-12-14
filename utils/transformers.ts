@@ -23,28 +23,30 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
     const assignee = dbTask.assignee ? {
         id: rawTask.assignee_id || 'unknown',
         display_name: dbTask.assignee.display_name || 'Unknown',
-        name: dbTask.assignee.display_name || 'Unknown', // Mapped to name
+        name: dbTask.assignee.display_name || 'Unknown',
         avatar_url: dbTask.assignee.avatar_url || '',
-        avatarUrl: dbTask.assignee.avatar_url || '', // Mapped to avatarUrl
+        avatarUrl: dbTask.assignee.avatar_url || '',
         email: '',
-        role: 'member' as const,
-        status: 'active' as const,
-        joinedDate: new Date().toISOString(), // Mock
-        teamIds: [], // Mock
+        role: 'Member' as const, // Fixed: Capitalized "Member"
+        status: 'offline' as const,
+        joinedDate: new Date().toISOString(),
+        teamIds: [],
         workspaceId: 'mock-ws'
     } : null;
 
     // Map Project
     const project = dbTask.project ? {
-        id: 'proj_mock', // project JOIN might not have ID in useTasks selection, limiting usage
+        id: 'proj_mock',
         name: dbTask.project.name,
         icon: undefined,
-        status: 'active' as const, // Mock
-        percentComplete: 0, // Mock
-        startDate: new Date().toISOString(), // Mock
-        targetDate: new Date().toISOString(), // Mock
-        lead: null, // Mock
-        members: [] // Mock
+        status: 'active' as const,
+        percentComplete: 0,
+        startDate: new Date().toISOString(),
+        targetDate: new Date().toISOString(),
+        lead: null,
+        members: [],
+        priority: 'medium' as const, // Added missing field
+        health: 'on_track' as const // Added missing field
     } : undefined;
 
     return {
