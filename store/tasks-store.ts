@@ -23,6 +23,7 @@ interface TasksState {
    getAllTasks: () => Task[];
 
    // Actions
+   setTasks: (tasks: Task[]) => void;
    addTask: (task: Task) => void;
    updateTask: (id: string, updatedTask: Partial<Task>) => void;
    deleteTask: (id: string) => void;
@@ -65,6 +66,13 @@ export const useTasksStore = create<TasksState>((set, get) => ({
    getAllTasks: () => get().tasks,
 
    // Actions
+   setTasks: (tasks: Task[]) => {
+      set(() => ({
+         tasks,
+         tasksByStatus: groupTasksByStatus(tasks),
+      }));
+   },
+
    addTask: (task: Task) => {
       set((state) => {
          const newTasks = [...state.tasks, task];
