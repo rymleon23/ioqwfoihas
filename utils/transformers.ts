@@ -4,6 +4,7 @@ import { status } from '@/mock-data/status';
 import { priorities } from '@/mock-data/priorities';
 import { labels } from '@/mock-data/labels';
 import { Cuboid } from 'lucide-react';
+import { users } from '@/mock-data/users';
 
 export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
     // Map Status (Supabase might return 'todo' | 'in_progress' etc, or we map workflow_state)
@@ -44,7 +45,7 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
         percentComplete: 0,
         startDate: new Date().toISOString(),
         targetDate: new Date().toISOString(),
-        lead: null,
+        lead: users[0], // Fixed: Assign valid mock User
         members: [],
         priority: priorities[0], // Fixed: Use valid Priority object
         health: { // Fixed: Match Health interface
@@ -57,14 +58,17 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
 
     return {
         id: dbTask.id,
-        identifier: `TSK-${dbTask.number}`, // Construct identifier
+        identifier: `TSK-${dbTask.number}`,
         title: dbTask.title,
+        description: '', // Mock/Default
         status: matchedStatus,
         priority: matchedPriority,
-        labels: [], // DB doesn't fetch labels yet in useTasks, defaulting to empty
-        date: new Date(dbTask.created_at).toLocaleDateString(),
+        labels: [],
+        createdAt: new Date(dbTask.created_at).toISOString().split('T')[0], // Map Date -> createdAt (YYYY-MM-DD)
+        phaseId: '42', // Mock
         assignee: assignee,
         project: project,
-        rank: dbTask.created_at // Use created_at for ranking for now
+        rank: dbTask.created_at, // Using created_at as rank proxy
+        subtasks: [] // Mock
     };
 }
