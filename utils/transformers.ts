@@ -3,6 +3,7 @@ import { Task as DBTask } from '@/hooks/use-tasks';
 import { status } from '@/mock-data/status';
 import { priorities } from '@/mock-data/priorities';
 import { labels } from '@/mock-data/labels';
+import { Cuboid } from 'lucide-react';
 
 export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
     // Map Status (Supabase might return 'todo' | 'in_progress' etc, or we map workflow_state)
@@ -38,7 +39,7 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
     const project = dbTask.project ? {
         id: 'proj_mock',
         name: dbTask.project.name,
-        icon: undefined,
+        icon: Cuboid, // Fixed: Use valid Icon component
         status: status[0], // Fixed: Use valid Status object from mock-data
         percentComplete: 0,
         startDate: new Date().toISOString(),
