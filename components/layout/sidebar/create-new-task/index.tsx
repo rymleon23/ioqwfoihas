@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -22,14 +24,35 @@ import { LabelSelector } from './label-selector';
 import { ranks } from '@/mock-data/tasks';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { createClient } from '@/utils/supabase/client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { TeamSelector } from './team-selector';
 
 export function CreateNewTask() {
    const [createMore, setCreateMore] = useState<boolean>(false);
    const { isOpen, defaultStatus, openModal, closeModal } = useCreateTaskStore();
    const { addTask, getAllTasks } = useTasksStore();
    const params = useParams();
+   const router = useRouter();
    const orgId = params.orgId as string;
+   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+   // Load default team
+   useEffect(() => {
+      const fetchDefaultTeam = async () => {
+         const supabase = createClient();
+         const { data } = await supabase
+            .from('team')
+            .select('id')
+            .eq('workspace_id', orgId)
+            .limit(1);
+         if (data && data.length > 0) {
+            setSelectedTeamId(data[0].id);
+         }
+      };
+      if (isOpen && !selectedTeamId && orgId) {
+         fetchDefaultTeam();
+      }
+   }, [isOpen, selectedTeamId, orgId]);
 
    const generateUniqueIdentifier = useCallback(() => {
       const identifiers = getAllTasks().map((task) => task.identifier);
@@ -70,7 +93,7 @@ export function CreateNewTask() {
    }, [createDefaultData]);
 
    const createTask = async () => {
-      console.log('--> EXECUTING NEW CREATE TASK VERSION <--'); // Debug log to confirm deployment
+      console.log('--> EXECUTING NEW CREATE TASK VERSION <--');
       if (!addTaskForm.title) {
          toast.error('Title is required');
          return;
@@ -78,67 +101,87 @@ export function CreateNewTask() {
 
       try {
          const supabase = createClient();
+         const teamId = selectedTeamId;
+         if (!teamId) {
+            toast.error('Please select a team');
+            return;
+         }
 
-         // 1. Get Team (Defaulting to first team for now if not selected)
-         // In a real app, we should allow team selection or infer from context.
-         // For now, we fetch a team to satisfy NOT NULL constraint.
-         const { data: teams } = await supabase.from('team').select('id').limit(1);
-         if (!teams || teams.length === 0) throw new Error('No teams found in workspace');
-         const teamId = teams[0].id;
-
-         // 2. Map Priority String to Integer (Linear standard: 0=None, 1=Urgent, 2=High, 3=Medium, 4=Low)
+         // 2. Map Priority
          const priorityMap: Record<string, number> = {
             'no-priority': 0,
             'urgent': 1,
             'high': 2,
             'medium': 3,
-            'low': 4
+            'low': 4,
          };
          const priorityInt = priorityMap[addTaskForm.priority.id] ?? 0;
 
-         // 3. Map Status ID to Workflow State UUID
-         // We try to match by name or type.
-         // Mock status IDs: 'to-do', 'in-progress', 'backlog', 'completed', 'canceled'
-         // DB State types: 'backlog', 'unstarted', 'started', 'completed', 'canceled'
-         let typeMap: string = 'unstarted'; // Default
-         switch (addTaskForm.status.id) {
-            case 'backlog': typeMap = 'backlog'; break;
-            case 'to-do': typeMap = 'unstarted'; break;
-            case 'in-progress': typeMap = 'started'; break;
-            case 'technical-review': typeMap = 'started'; break; // Map to started
-            case 'completed': typeMap = 'completed'; break;
-            case 'paused': typeMap = 'canceled'; break; // Map paused to canceled or similar
-            default: typeMap = 'unstarted';
+         // 3. Map Status (Use real State ID if available from UI, else fetch/map logic)
+         // Since StatusSelector now returns a status with ID = WorkflowState UUID, we can use it directly?
+         // Check if ID is UUID (len 36). If not (mock ID), fallback to map.
+         let stateId = null;
+         if (addTaskForm.status.id && addTaskForm.status.id.length === 36) {
+            stateId = addTaskForm.status.id;
+         } else {
+            // Fallback Mapping logic
+            let typeMap: string = 'unstarted';
+            switch (addTaskForm.status.id) {
+               case 'backlog':
+                  typeMap = 'backlog';
+                  break;
+               case 'to-do':
+                  typeMap = 'unstarted';
+                  break;
+               case 'in-progress':
+                  typeMap = 'started';
+                  break;
+               case 'technical-review':
+                  typeMap = 'started';
+                  break;
+               case 'completed':
+                  typeMap = 'completed';
+                  break;
+               case 'paused':
+                  typeMap = 'canceled';
+                  break;
+               default:
+                  typeMap = 'unstarted';
+            }
+            const { data: states } = await supabase
+               .from('workflow_state')
+               .select('id')
+               .eq('team_id', teamId)
+               .eq('type', typeMap)
+               .limit(1);
+            stateId = states && states.length > 0 ? states[0].id : null;
          }
-
-         const { data: states } = await supabase
-            .from('workflow_state')
-            .select('id')
-            .eq('team_id', teamId)
-            .eq('type', typeMap)
-            .limit(1);
-
-         const stateId = states && states.length > 0 ? states[0].id : null;
 
          // Insert Task
          const { error } = await supabase.from('task').insert({
             id: addTaskForm.id,
             title: addTaskForm.title,
             workspace_id: orgId,
-            team_id: teamId, // Required
-            status: undefined, // "status" column doesn't exist? Schema said "state_id"
-            state_id: stateId, // Real UUID
+            team_id: teamId,
+            state_id: stateId,
             priority: priorityInt,
             assignee_id: addTaskForm.assignee?.id || null,
-            // description: addTaskForm.description // Add if DB has it
+            description: addTaskForm.description,
          });
 
          if (error) throw error;
 
          toast.success('Task created');
-         // We should ideally refetch tasks here as we don't know the generated 'number' or 'created_at' for exact store match
-         // But adding to store optimistically is fine for now
-         addTask(addTaskForm);
+
+         // Refresh router to update server data (specifically identifiers)
+         router.refresh();
+
+         // Optimistic update (note: identifier will be wrong until refresh completes or next fetch)
+         addTask({
+            ...addTaskForm,
+            // We could try to construct accurate ID if we fetched team Key, but router.refresh is easier
+         });
+
          if (!createMore) {
             closeModal();
          }
@@ -160,10 +203,7 @@ export function CreateNewTask() {
             <DialogHeader>
                <DialogTitle>
                   <div className="flex items-center px-4 pt-4 gap-2">
-                     <Button size="sm" variant="outline" className="gap-1.5">
-                        <Heart className="size-4 text-orange-500 fill-orange-500" />
-                        <span className="font-medium">CORE</span>
-                     </Button>
+                     <TeamSelector teamId={selectedTeamId} onChange={setSelectedTeamId} />
                   </div>
                </DialogTitle>
             </DialogHeader>
@@ -187,6 +227,7 @@ export function CreateNewTask() {
                   <StatusSelector
                      status={addTaskForm.status}
                      onChange={(newStatus) => setAddTaskForm({ ...addTaskForm, status: newStatus })}
+                     teamId={selectedTeamId}
                   />
                   <PrioritySelector
                      priority={addTaskForm.priority}

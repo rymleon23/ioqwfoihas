@@ -11,9 +11,13 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTasksStore } from '@/store/tasks-store';
-import { Project, projects } from '@/mock-data/projects';
+import { Project, projects as mockProjects } from '@/mock-data/projects';
 import { Box, CheckIcon, FolderIcon } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { useParams } from 'next/navigation';
+import { priorities } from '@/mock-data/priorities';
+import { status } from '@/mock-data/status';
 
 interface ProjectSelectorProps {
    project: Project | undefined;
@@ -24,6 +28,9 @@ export function ProjectSelector({ project, onChange }: ProjectSelectorProps) {
    const id = useId();
    const [open, setOpen] = useState<boolean>(false);
    const [value, setValue] = useState<string | undefined>(project?.id);
+   const [projects, setProjects] = useState<any[]>([]);
+   const params = useParams();
+   const orgId = params.orgId as string;
 
    const { filterByProject } = useTasksStore();
 
@@ -31,15 +38,36 @@ export function ProjectSelector({ project, onChange }: ProjectSelectorProps) {
       setValue(project?.id);
    }, [project]);
 
+   useEffect(() => {
+      const fetchProjects = async () => {
+         const supabase = createClient();
+         const { data } = await supabase.from('project').select('*').eq('workspace_id', orgId);
+         if (data) setProjects(data);
+      };
+      if (orgId) fetchProjects();
+   }, [orgId]);
+
    const handleProjectChange = (projectId: string) => {
       if (projectId === 'no-project') {
          setValue(undefined);
          onChange(undefined);
       } else {
          setValue(projectId);
-         const newProject = projects.find((p) => p.id === projectId);
-         if (newProject) {
-            onChange(newProject);
+         const dbProject = projects.find((p) => p.id === projectId);
+         if (dbProject) {
+            // Map DB Project to Store Project
+            const mappedProject: Project = {
+               id: dbProject.id,
+               name: dbProject.name,
+               icon: Box, // Default icon
+               status: status[0], // Mock status for now
+               percentComplete: 0,
+               startDate: '',
+               lead: { ...mockProjects[0].lead }, // Fallback mock lead
+               priority: priorities[0],
+               health: { id: 'on-track', name: 'On Track', color: 'green', description: '' },
+            };
+            onChange(mappedProject);
          }
       }
       setOpen(false);
@@ -61,8 +89,7 @@ export function ProjectSelector({ project, onChange }: ProjectSelectorProps) {
                      (() => {
                         const selectedProject = projects.find((p) => p.id === value);
                         if (selectedProject) {
-                           const Icon = selectedProject.icon;
-                           return <Icon className="size-4" />;
+                           return <Box className="size-4" />;
                         }
                         return <Box className="size-4" />;
                      })()
@@ -95,18 +122,15 @@ export function ProjectSelector({ project, onChange }: ProjectSelectorProps) {
                         {projects.map((project) => (
                            <CommandItem
                               key={project.id}
-                              value={project.id}
+                              value={project.name}
                               onSelect={() => handleProjectChange(project.id)}
                               className="flex items-center justify-between"
                            >
                               <div className="flex items-center gap-2">
-                                 <project.icon className="size-4" />
+                                 <Box className="size-4" />
                                  {project.name}
                               </div>
                               {value === project.id && <CheckIcon size={16} className="ml-auto" />}
-                              <span className="text-muted-foreground text-xs">
-                                 {filterByProject(project.id).length}
-                              </span>
                            </CommandItem>
                         ))}
                      </CommandGroup>

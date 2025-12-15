@@ -11,6 +11,7 @@ export interface Task {
    id: string;
    number: number;
    title: string;
+   description: string | null;
    status: string;
    priority: string;
    created_at: string;
@@ -43,6 +44,7 @@ export function useTasks({ workspaceId, teamId, assigneeId }: UseTasksOptions = 
           assignee:users!task_assignee_id_fkey(display_name, avatar_url),
           workflow_state(name, color, type),
           project(name),
+          team(key),
           priority,
           number
         `
