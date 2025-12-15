@@ -70,6 +70,7 @@ export function CreateNewTask() {
    }, [createDefaultData]);
 
    const createTask = async () => {
+      console.log('--> EXECUTING NEW CREATE TASK VERSION <--'); // Debug log to confirm deployment
       if (!addTaskForm.title) {
          toast.error('Title is required');
          return;
@@ -77,22 +78,67 @@ export function CreateNewTask() {
 
       try {
          const supabase = createClient();
+
+         // 1. Get Team (Defaulting to first team for now if not selected)
+         // In a real app, we should allow team selection or infer from context.
+         // For now, we fetch a team to satisfy NOT NULL constraint.
+         const { data: teams } = await supabase.from('team').select('id').limit(1);
+         if (!teams || teams.length === 0) throw new Error('No teams found in workspace');
+         const teamId = teams[0].id;
+
+         // 2. Map Priority String to Integer (Linear standard: 0=None, 1=Urgent, 2=High, 3=Medium, 4=Low)
+         const priorityMap: Record<string, number> = {
+            'no-priority': 0,
+            'urgent': 1,
+            'high': 2,
+            'medium': 3,
+            'low': 4
+         };
+         const priorityInt = priorityMap[addTaskForm.priority.id] ?? 0;
+
+         // 3. Map Status ID to Workflow State UUID
+         // We try to match by name or type.
+         // Mock status IDs: 'to-do', 'in-progress', 'backlog', 'completed', 'canceled'
+         // DB State types: 'backlog', 'unstarted', 'started', 'completed', 'canceled'
+         let typeMap: string = 'unstarted'; // Default
+         switch (addTaskForm.status.id) {
+            case 'backlog': typeMap = 'backlog'; break;
+            case 'to-do': typeMap = 'unstarted'; break;
+            case 'in-progress': typeMap = 'started'; break;
+            case 'technical-review': typeMap = 'started'; break; // Map to started
+            case 'completed': typeMap = 'completed'; break;
+            case 'paused': typeMap = 'canceled'; break; // Map paused to canceled or similar
+            default: typeMap = 'unstarted';
+         }
+
+         const { data: states } = await supabase
+            .from('workflow_state')
+            .select('id')
+            .eq('team_id', teamId)
+            .eq('type', typeMap)
+            .limit(1);
+
+         const stateId = states && states.length > 0 ? states[0].id : null;
+
+         // Insert Task
          const { error } = await supabase.from('task').insert({
             id: addTaskForm.id,
             title: addTaskForm.title,
-            // Map Store Task to DB Task fields
             workspace_id: orgId,
-            status: addTaskForm.status.id,
-            priority: addTaskForm.priority.id,
-            assignee_id: addTaskForm.assignee?.id || null, // Map ID
-            // created_at: addTaskForm.createdAt, // Let DB handle default now() or pass it
-            // description: addTaskForm.description // DB check?
+            team_id: teamId, // Required
+            status: undefined, // "status" column doesn't exist? Schema said "state_id"
+            state_id: stateId, // Real UUID
+            priority: priorityInt,
+            assignee_id: addTaskForm.assignee?.id || null,
+            // description: addTaskForm.description // Add if DB has it
          });
 
          if (error) throw error;
 
          toast.success('Task created');
-         addTask(addTaskForm); // Optimistic update or keep for local feedback
+         // We should ideally refetch tasks here as we don't know the generated 'number' or 'created_at' for exact store match
+         // But adding to store optimistically is fine for now
+         addTask(addTaskForm);
          if (!createMore) {
             closeModal();
          }
