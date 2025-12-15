@@ -6,18 +6,27 @@ import { labels } from '@/mock-data/labels';
 import { Cuboid } from 'lucide-react';
 import { users } from '@/mock-data/users';
 
-export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
+// Defines a DTO that is safe to pass from Server to Client (no functions/components)
+export interface SerializableTask extends Omit<StoreTask, 'status' | 'priority' | 'project'> {
+    statusId: string;
+    priorityId: string;
+    project?: Omit<StoreTask['project'], 'icon' | 'status' | 'lead' | 'priority'> & {
+        iconName?: string; // Optional if we want to map it back
+        statusId?: string;
+    };
+    // Re-add potentially complex fields if they need simplification, but mostly status/priority/icon are the blockers
+}
+
+export function dbTaskToStoreTask(dbTask: DBTask): SerializableTask {
     // Map Status (Supabase might return 'todo' | 'in_progress' etc, or we map workflow_state)
     // For now, let's assume workflow_state.name maps to our status IDs or we use a default
     // Since the DB query joins workflow_state, we try to match it.
     // Fallback to 'todo' if not found.
 
     const statusId = dbTask.status || 'todo'; // Or map from dbTask.workflow_state?.name
-    const matchedStatus = status.find(s => s.id === statusId) || status[0];
 
     // Map Priority
     const priorityId = dbTask.priority || 'no_priority';
-    const matchedPriority = priorities.find(p => p.id === priorityId) || priorities[0];
 
     // Map Assignee
     // We treat dbTask as any here to access assignee_id which comes from '*' but is missing in interface
@@ -40,14 +49,16 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
     const project = dbTask.project ? {
         id: 'proj_mock',
         name: dbTask.project.name,
-        icon: Cuboid, // Fixed: Use valid Icon component
-        status: status[0], // Fixed: Use valid Status object from mock-data
+        // icon: Cuboid, // REMOVED: Component
+        // status: status[0], // REMOVED: Object with Component
+        statusId: 'to-do',
         percentComplete: 0,
         startDate: new Date().toISOString(),
         targetDate: new Date().toISOString(),
-        lead: users[0], // Fixed: Assign valid mock User
+        // lead: users[0], // Users are data-only, likely safe check mock-data/users.ts? Yes they seem safe.
+        // Actually, let's play safe and omit lead for now or flatten it if needed, but error was specifically 'icon: function'
         members: [],
-        priority: priorities[0], // Fixed: Use valid Priority object
+        priorityId: 'medium',
         health: { // Fixed: Match Health interface
             id: 'on-track' as const,
             name: 'On Track',
@@ -61,8 +72,8 @@ export function dbTaskToStoreTask(dbTask: DBTask): StoreTask {
         identifier: `TSK-${dbTask.number}`,
         title: dbTask.title,
         description: '', // Mock/Default
-        status: matchedStatus,
-        priority: matchedPriority,
+        statusId: statusId, // STRING
+        priorityId: priorityId, // STRING
         labels: [],
         createdAt: new Date(dbTask.created_at).toISOString().split('T')[0], // Map Date -> createdAt (YYYY-MM-DD)
         phaseId: '42', // Mock
