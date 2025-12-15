@@ -21,11 +21,15 @@ import { ProjectSelector } from './project-selector';
 import { LabelSelector } from './label-selector';
 import { ranks } from '@/mock-data/tasks';
 import { DialogTitle } from '@radix-ui/react-dialog';
+import { createClient } from '@/utils/supabase/client';
+import { useParams } from 'next/navigation';
 
 export function CreateNewTask() {
    const [createMore, setCreateMore] = useState<boolean>(false);
    const { isOpen, defaultStatus, openModal, closeModal } = useCreateTaskStore();
    const { addTask, getAllTasks } = useTasksStore();
+   const params = useParams();
+   const orgId = params.orgId as string;
 
    const generateUniqueIdentifier = useCallback(() => {
       const identifiers = getAllTasks().map((task) => task.identifier);
@@ -65,17 +69,38 @@ export function CreateNewTask() {
       setAddTaskForm(createDefaultData());
    }, [createDefaultData]);
 
-   const createTask = () => {
+   const createTask = async () => {
       if (!addTaskForm.title) {
          toast.error('Title is required');
          return;
       }
-      toast.success('Task created');
-      addTask(addTaskForm);
-      if (!createMore) {
-         closeModal();
+
+      try {
+         const supabase = createClient();
+         const { error } = await supabase.from('task').insert({
+            id: addTaskForm.id,
+            title: addTaskForm.title,
+            // Map Store Task to DB Task fields
+            workspace_id: orgId,
+            status: addTaskForm.status.id,
+            priority: addTaskForm.priority.id,
+            assignee_id: addTaskForm.assignee?.id || null, // Map ID
+            // created_at: addTaskForm.createdAt, // Let DB handle default now() or pass it
+            // description: addTaskForm.description // DB check?
+         });
+
+         if (error) throw error;
+
+         toast.success('Task created');
+         addTask(addTaskForm); // Optimistic update or keep for local feedback
+         if (!createMore) {
+            closeModal();
+         }
+         setAddTaskForm(createDefaultData());
+      } catch (e) {
+         console.error(e);
+         toast.error('Failed to create task');
       }
-      setAddTaskForm(createDefaultData());
    };
 
    return (
